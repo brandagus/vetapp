@@ -75,7 +75,7 @@ export default function Mascotas() {
       setShowCreate(false);
       reset();
       toast.success("Paciente registrado");
-      setLocation(`/mascotas/${data.id}`);
+      setLocation(`/pacientes/${data.id}`);
     },
     onError: () => toast.error("Error al registrar"),
   });
@@ -138,7 +138,7 @@ export default function Mascotas() {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Buscar por nombre, raza, dueño o teléfono..."
+          placeholder="Buscar por nombre, raza, familiar o teléfono..."
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           className="pl-9"
@@ -189,7 +189,7 @@ export default function Mascotas() {
             <Card
               key={pet.id}
               className="cursor-pointer hover:shadow-md transition-all hover:border-primary/30"
-              onClick={() => setLocation(`/mascotas/${pet.id}`)}
+              onClick={() => setLocation(`/pacientes/${pet.id}`)}
             >
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
@@ -241,7 +241,7 @@ export default function Mascotas() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Owner */}
             <div className="space-y-1.5">
-              <Label>Propietario *</Label>
+              <Label>Familiar *</Label>
               <Controller
                 name="ownerId"
                 control={control}
@@ -251,7 +251,7 @@ export default function Mascotas() {
                     onValueChange={(v) => field.onChange(parseInt(v))}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Seleccioná un propietario" />
+                      <SelectValue placeholder="Seleccioná un familiar" />
                     </SelectTrigger>
                     <SelectContent>
                       {owners?.map((o) => (

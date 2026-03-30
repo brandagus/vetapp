@@ -26,10 +26,9 @@ import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
 import {
   LayoutDashboard,
-  Users,
   PawPrint,
-  ClipboardList,
   Calendar,
+  BarChart3,
   DollarSign,
   LogOut,
   PanelLeft,
@@ -45,7 +44,6 @@ const FAVICON_URL =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663257025837/JUiL9uNgzLcukwfiCo6W6y/favicon-branda-TouXYfgoVP6Wwu6apagXQY.webp";
 
 const APP_NAME = "Dra Branda";
-const APP_SUBTITLE = "Veterinaria a Domicilio";
 
 const menuGroups = [
   {
@@ -57,16 +55,15 @@ const menuGroups = [
   {
     label: "Clínica",
     items: [
-      { icon: Users, label: "Propietarios", path: "/propietarios" },
-      { icon: PawPrint, label: "Mascotas", path: "/mascotas" },
-      { icon: ClipboardList, label: "Historial Clínico", path: "/historial" },
+      { icon: PawPrint, label: "Pacientes", path: "/pacientes" },
+      { icon: Calendar, label: "Turnos", path: "/turnos" },
     ],
   },
   {
     label: "Gestión",
     items: [
-      { icon: Calendar, label: "Turnos", path: "/turnos" },
       { icon: DollarSign, label: "Finanzas", path: "/finanzas" },
+      { icon: BarChart3, label: "Estadísticas", path: "/estadisticas" },
     ],
   },
 ];

@@ -76,3 +76,13 @@
 - [x] Auto-relleno de fecha/hora al crear visita
 - [x] Buscador/filtro inteligente: por nombre de dueño, nombre de mascota, especie
 - [x] Filtros por especie (perro, gato, etc.)
+
+## Reestructuración de Navegación
+- [x] Simplificar sidebar a 3 módulos: Pacientes, Turnos, Estadísticas
+- [x] Eliminar secciones separadas de Propietarios e Historial Clínico
+- [x] Renombrar "Propietario" a "Familiar" en toda la app
+- [x] Pacientes: base de datos unificada con búsqueda por mascota, familiar, especie, etc.
+- [x] Perfil de paciente: mostrar familiar, historial como "entries" inline
+- [x] Poder agregar nueva entry (visita) desde el perfil del paciente
+- [x] Módulo Estadísticas: página "Próximamente" (coming soon)
+- [x] Dashboard simplificado como página de inicio

@@ -84,7 +84,11 @@ export default function VisitaDetalle() {
   const deleteMutation = trpc.visits.delete.useMutation({
     onSuccess: () => {
       utils.visits.listRecent.invalidate();
-      setLocation("/historial");
+      if (visit?.petId) {
+        setLocation(`/pacientes/${visit.petId}`);
+      } else {
+        setLocation("/pacientes");
+      }
       toast.success("Visita eliminada");
     },
   });
@@ -176,7 +180,7 @@ export default function VisitaDetalle() {
     return (
       <div className="text-center py-16">
         <p className="text-muted-foreground">Visita no encontrada</p>
-        <Button variant="outline" className="mt-4" onClick={() => setLocation("/historial")}>
+        <Button variant="outline" className="mt-4" onClick={() => setLocation("/pacientes")}>
           Volver
         </Button>
       </div>
@@ -189,9 +193,9 @@ export default function VisitaDetalle() {
     <div className="space-y-5 max-w-2xl">
       {/* Back + actions */}
       <div className="flex items-center justify-between gap-3">
-        <Button variant="ghost" size="sm" onClick={() => setLocation("/historial")} className="-ml-2">
+        <Button variant="ghost" size="sm" onClick={() => window.history.back()} className="-ml-2">
           <ArrowLeft className="h-4 w-4 mr-1.5" />
-          Historial
+          Volver
         </Button>
         <div className="flex gap-2">
           {!isEditing ? (

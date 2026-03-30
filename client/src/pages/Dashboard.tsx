@@ -109,13 +109,13 @@ export default function Dashboard() {
           color="amber"
         />
         <StatCard
-          title="Propietarios"
+          title="Familiares"
           value={stats?.totalOwners ?? 0}
           icon={Users}
           color="blue"
         />
         <StatCard
-          title="Mascotas"
+          title="Pacientes"
           value={stats?.totalPets ?? 0}
           icon={PawPrint}
           color="green"
@@ -257,7 +257,7 @@ export default function Dashboard() {
               variant="ghost"
               size="sm"
               className="text-xs text-muted-foreground"
-              onClick={() => setLocation("/historial")}
+              onClick={() => setLocation("/pacientes")}
             >
               Ver todas
               <ChevronRight className="h-3 w-3 ml-1" />

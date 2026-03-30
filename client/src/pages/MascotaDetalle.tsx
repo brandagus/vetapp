@@ -128,7 +128,7 @@ export default function MascotaDetalle() {
   const deleteMut = trpc.pets.delete.useMutation({
     onSuccess: () => {
       utils.pets.list.invalidate();
-      setLocation("/mascotas");
+      setLocation("/pacientes");
       toast.success("Paciente eliminado");
     },
   });
@@ -150,7 +150,7 @@ export default function MascotaDetalle() {
   if (!pet) {
     return (
       <div className="max-w-4xl">
-        <Button variant="ghost" onClick={() => setLocation("/mascotas")}>
+        <Button variant="ghost" onClick={() => setLocation("/pacientes")}>
           <ArrowLeft className="h-4 w-4 mr-2" /> Volver
         </Button>
         <p className="text-muted-foreground mt-8 text-center">Paciente no encontrado.</p>
@@ -215,7 +215,7 @@ export default function MascotaDetalle() {
   return (
     <div className="max-w-4xl space-y-6">
       {/* Back button */}
-      <Button variant="ghost" size="sm" onClick={() => setLocation("/mascotas")} className="gap-2">
+      <Button variant="ghost" size="sm" onClick={() => setLocation("/pacientes")} className="gap-2">
         <ArrowLeft className="h-4 w-4" /> Pacientes
       </Button>
 
@@ -298,7 +298,7 @@ export default function MascotaDetalle() {
                 </Button>
                 <Button
                   size="sm"
-                  onClick={() => setLocation(`/mascotas/${petId}/nueva-visita`)}
+                  onClick={() => setLocation(`/pacientes/${petId}/nueva-visita`)}
                   className="gap-1.5"
                 >
                   <Plus className="h-3.5 w-3.5" /> Nueva visita
@@ -337,7 +337,7 @@ export default function MascotaDetalle() {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <User className="h-4 w-4 text-primary" /> Propietario
+            <User className="h-4 w-4 text-primary" /> Familiar
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -350,7 +350,7 @@ export default function MascotaDetalle() {
                 <p className="text-xs text-muted-foreground">Nombre</p>
                 <button
                   className="font-medium truncate text-primary hover:underline text-sm"
-                  onClick={() => setLocation(`/propietarios/${pet.ownerId}`)}
+                  onClick={() => {}}
                 >
                   {pet.ownerName ?? "—"}
                 </button>
@@ -427,7 +427,7 @@ export default function MascotaDetalle() {
           </h2>
           <Button
             size="sm"
-            onClick={() => setLocation(`/mascotas/${petId}/nueva-visita`)}
+            onClick={() => setLocation(`/pacientes/${petId}/nueva-visita`)}
             className="gap-1.5"
           >
             <Plus className="h-3.5 w-3.5" /> Nueva visita
@@ -443,7 +443,7 @@ export default function MascotaDetalle() {
                 variant="outline"
                 size="sm"
                 className="mt-4"
-                onClick={() => setLocation(`/mascotas/${petId}/nueva-visita`)}
+                onClick={() => setLocation(`/pacientes/${petId}/nueva-visita`)}
               >
                 <Plus className="h-4 w-4 mr-1" /> Registrar primera visita
               </Button>
@@ -455,7 +455,7 @@ export default function MascotaDetalle() {
               <Card
                 key={visit.id}
                 className="hover:shadow-md transition-shadow cursor-pointer group"
-                onClick={() => setLocation(`/historial/${visit.id}`)}
+                onClick={() => setLocation(`/visita/${visit.id}`)}
               >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-3">

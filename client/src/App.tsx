@@ -8,30 +8,26 @@ import DashboardLayout from "./components/DashboardLayout";
 
 // Pages
 import Dashboard from "./pages/Dashboard";
-import Propietarios from "./pages/Propietarios";
-import PropietarioDetalle from "./pages/PropietarioDetalle";
-import Mascotas from "./pages/Mascotas";
-import MascotaDetalle from "./pages/MascotaDetalle";
-import Historial from "./pages/Historial";
+import Pacientes from "./pages/Mascotas";
+import PacienteDetalle from "./pages/MascotaDetalle";
+import NuevaVisita from "./pages/NuevaVisita";
 import VisitaDetalle from "./pages/VisitaDetalle";
 import Turnos from "./pages/Turnos";
 import Finanzas from "./pages/Finanzas";
-import NuevaVisita from "./pages/NuevaVisita";
+import Estadisticas from "./pages/Estadisticas";
 
 function AppRoutes() {
   return (
     <DashboardLayout>
       <Switch>
         <Route path="/" component={Dashboard} />
-        <Route path="/propietarios" component={Propietarios} />
-        <Route path="/propietarios/:id" component={PropietarioDetalle} />
-        <Route path="/mascotas" component={Mascotas} />
-        <Route path="/mascotas/:id" component={MascotaDetalle} />
-        <Route path="/mascotas/:id/nueva-visita" component={NuevaVisita} />
-        <Route path="/historial" component={Historial} />
-        <Route path="/historial/:id" component={VisitaDetalle} />
+        <Route path="/pacientes" component={Pacientes} />
+        <Route path="/pacientes/:id" component={PacienteDetalle} />
+        <Route path="/pacientes/:id/nueva-visita" component={NuevaVisita} />
+        <Route path="/visita/:id" component={VisitaDetalle} />
         <Route path="/turnos" component={Turnos} />
         <Route path="/finanzas" component={Finanzas} />
+        <Route path="/estadisticas" component={Estadisticas} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>

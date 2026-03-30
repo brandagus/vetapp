@@ -153,7 +153,7 @@ export default function NuevaVisita() {
   if (!pet) {
     return (
       <div className="max-w-3xl">
-        <Button variant="ghost" onClick={() => setLocation("/mascotas")}>
+        <Button variant="ghost" onClick={() => setLocation("/pacientes")}>
           <ArrowLeft className="h-4 w-4 mr-2" /> Volver
         </Button>
         <p className="text-muted-foreground mt-8 text-center">Paciente no encontrado.</p>
@@ -167,7 +167,7 @@ export default function NuevaVisita() {
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => setLocation(`/mascotas/${petId}`)}
+        onClick={() => setLocation(`/pacientes/${petId}`)}
         className="gap-2"
       >
         <ArrowLeft className="h-4 w-4" /> Volver al perfil
@@ -333,7 +333,7 @@ export default function NuevaVisita() {
           <div className="flex gap-3 justify-end">
             <Button
               variant="outline"
-              onClick={() => setLocation(`/mascotas/${petId}`)}
+              onClick={() => setLocation(`/pacientes/${petId}`)}
             >
               Cancelar
             </Button>
