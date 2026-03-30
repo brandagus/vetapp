@@ -11,6 +11,7 @@ import { dashboardRouter } from "./routers/dashboard";
 import { googleCalendarRouter } from "./routers/googleCalendar";
 import { vaccinationsRouter } from "./routers/vaccinations";
 import { voiceRouter } from "./routers/voice";
+import { adminUsersRouter } from "./routers/adminUsers";
 
 export const appRouter = router({
   system: systemRouter,
@@ -31,6 +32,7 @@ export const appRouter = router({
   googleCalendar: googleCalendarRouter,
   vaccinations: vaccinationsRouter,
   voice: voiceRouter,
+  adminUsers: adminUsersRouter,
 });
 
 export type AppRouter = typeof appRouter;

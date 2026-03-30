@@ -140,3 +140,16 @@
 - [x] 19 vacunas con seguimiento (aplicadas, vencidas, programadas)
 - [x] 17 pagos (pagados, pendientes, parciales)
 - [x] Verificación completa: Dashboard, Pacientes, Perfil, Turnos, Finanzas
+
+## Panel de Administración
+- [x] Actualizar schema: agregar passwordHash, isActive a tabla users
+- [x] Sistema de login con email/contraseña (además de OAuth)
+- [x] Router de gestión de usuarios (CRUD, cambiar contraseña, cambiar rol)
+- [x] Protección de rutas por rol (admin vs user)
+- [x] UI: página de administración con lista de usuarios
+- [x] UI: crear nuevo usuario con email, nombre, rol, contraseña
+- [x] UI: editar perfil de usuario, cambiar contraseña, activar/desactivar
+- [x] UI: página de login con email/contraseña (/login)
+- [x] Owner del proyecto = admin maestro automáticamente
+- [x] Bloqueo de usuarios desactivados (no pueden acceder al sistema)
+- [x] 23 tests pasando (12 nuevos para admin + 11 existentes)

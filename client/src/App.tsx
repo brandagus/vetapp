@@ -16,24 +16,32 @@ import Turnos from "./pages/Turnos";
 import Finanzas from "./pages/Finanzas";
 import Estadisticas from "./pages/Estadisticas";
 import NuevoPaciente from "./pages/NuevoPaciente";
+import AdminUsuarios from "./pages/AdminUsuarios";
+import LoginEmail from "./pages/LoginEmail";
 
 function AppRoutes() {
   return (
-    <DashboardLayout>
-      <Switch>
-        <Route path="/" component={Dashboard} />
-        <Route path="/pacientes" component={Pacientes} />
-        <Route path="/pacientes/nuevo" component={NuevoPaciente} />
-        <Route path="/pacientes/:id" component={PacienteDetalle} />
-        <Route path="/pacientes/:id/nueva-visita" component={NuevaVisita} />
-        <Route path="/visita/:id" component={VisitaDetalle} />
-        <Route path="/turnos" component={Turnos} />
-        <Route path="/finanzas" component={Finanzas} />
-        <Route path="/estadisticas" component={Estadisticas} />
-        <Route path="/404" component={NotFound} />
-        <Route component={NotFound} />
-      </Switch>
-    </DashboardLayout>
+    <Switch>
+      <Route path="/login" component={LoginEmail} />
+      <Route>
+        <DashboardLayout>
+          <Switch>
+            <Route path="/" component={Dashboard} />
+            <Route path="/pacientes" component={Pacientes} />
+            <Route path="/pacientes/nuevo" component={NuevoPaciente} />
+            <Route path="/pacientes/:id" component={PacienteDetalle} />
+            <Route path="/pacientes/:id/nueva-visita" component={NuevaVisita} />
+            <Route path="/visita/:id" component={VisitaDetalle} />
+            <Route path="/turnos" component={Turnos} />
+            <Route path="/finanzas" component={Finanzas} />
+            <Route path="/estadisticas" component={Estadisticas} />
+            <Route path="/admin/usuarios" component={AdminUsuarios} />
+            <Route path="/404" component={NotFound} />
+            <Route component={NotFound} />
+          </Switch>
+        </DashboardLayout>
+      </Route>
+    </Switch>
   );
 }
 

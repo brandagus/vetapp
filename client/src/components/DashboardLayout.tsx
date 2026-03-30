@@ -32,6 +32,7 @@ import {
   DollarSign,
   LogOut,
   PanelLeft,
+  UserCog,
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -45,7 +46,7 @@ const FAVICON_URL =
 
 const APP_NAME = "Dra Branda";
 
-const menuGroups = [
+const baseMenuGroups = [
   {
     label: "Principal",
     items: [
@@ -67,6 +68,20 @@ const menuGroups = [
     ],
   },
 ];
+
+const adminMenuGroup = {
+  label: "Administración",
+  items: [
+    { icon: UserCog, label: "Usuarios", path: "/admin/usuarios" },
+  ],
+};
+
+function getMenuGroups(role?: string) {
+  if (role === "admin") {
+    return [...baseMenuGroups, adminMenuGroup];
+  }
+  return baseMenuGroups;
+}
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
 const DEFAULT_WIDTH = 260;
@@ -123,6 +138,24 @@ export default function DashboardLayout({
           >
             Iniciar sesión
           </Button>
+          <div className="relative w-full">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">o</span>
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => {
+              window.location.href = "/login";
+            }}
+            size="lg"
+            className="w-full"
+          >
+            Ingresar con email y contraseña
+          </Button>
         </div>
       </div>
     );
@@ -160,9 +193,11 @@ function DashboardLayoutContent({
   const sidebarRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
 
+  const menuGroups = getMenuGroups(user?.role);
+
   const activeLabel = menuGroups
     .flatMap(g => g.items)
-    .find(item => item.path === location || (item.path !== "/" && location.startsWith(item.path)))
+    .find((item: { path: string; label: string }) => item.path === location || (item.path !== "/" && location.startsWith(item.path)))
     ?.label ?? "Dra Branda";
 
   useEffect(() => {

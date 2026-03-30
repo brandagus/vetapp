@@ -43,6 +43,13 @@
       "when": 1774888409874,
       "tag": "0005_premium_the_hand",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1774893526989,
+      "tag": "0006_dear_medusa",
+      "breakpoints": true
     }
   ]
 }

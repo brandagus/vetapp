@@ -5,6 +5,7 @@ import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { registerGoogleCalendarRoutes } from "../googleCalendarRoutes";
+import { registerLocalAuthRoutes } from "../localAuth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -37,6 +38,7 @@ async function startServer() {
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
   registerGoogleCalendarRoutes(app);
+  registerLocalAuthRoutes(app);
   // tRPC API
   app.use(
     "/api/trpc",
