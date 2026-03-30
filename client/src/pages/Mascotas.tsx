@@ -128,7 +128,7 @@ export default function Mascotas() {
             {filteredPets.length} de {pets?.length ?? 0} pacientes
           </p>
         </div>
-        <Button onClick={() => setShowCreate(true)} className="shrink-0">
+        <Button onClick={() => setLocation("/pacientes/nuevo")} className="shrink-0">
           <Plus className="h-4 w-4 mr-1.5" />
           Nuevo
         </Button>

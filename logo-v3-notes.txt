@@ -1,0 +1,5 @@
+Logo v3 processed:
+- Background removed cleanly - transparent PNG
+- Greyhound + cat illustration looks great with no background
+- Favicon version created at 180x180 and 32x32
+- Ready to upload to CDN

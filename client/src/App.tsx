@@ -15,6 +15,7 @@ import VisitaDetalle from "./pages/VisitaDetalle";
 import Turnos from "./pages/Turnos";
 import Finanzas from "./pages/Finanzas";
 import Estadisticas from "./pages/Estadisticas";
+import NuevoPaciente from "./pages/NuevoPaciente";
 
 function AppRoutes() {
   return (
@@ -22,6 +23,7 @@ function AppRoutes() {
       <Switch>
         <Route path="/" component={Dashboard} />
         <Route path="/pacientes" component={Pacientes} />
+        <Route path="/pacientes/nuevo" component={NuevoPaciente} />
         <Route path="/pacientes/:id" component={PacienteDetalle} />
         <Route path="/pacientes/:id/nueva-visita" component={NuevaVisita} />
         <Route path="/visita/:id" component={VisitaDetalle} />

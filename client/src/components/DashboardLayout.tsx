@@ -39,9 +39,9 @@ import { DashboardLayoutSkeleton } from "./DashboardLayoutSkeleton";
 import { Button } from "./ui/button";
 
 const LOGO_URL =
-  "https://d2xsxph8kpxj0f.cloudfront.net/310519663257025837/JUiL9uNgzLcukwfiCo6W6y/logo-branda-dSDxQfhEDdCSAronx4QXoz.webp";
+  "https://d2xsxph8kpxj0f.cloudfront.net/310519663257025837/JUiL9uNgzLcukwfiCo6W6y/logo-branda-v3_9606d0ff.png";
 const FAVICON_URL =
-  "https://d2xsxph8kpxj0f.cloudfront.net/310519663257025837/JUiL9uNgzLcukwfiCo6W6y/favicon-branda-TouXYfgoVP6Wwu6apagXQY.webp";
+  "https://d2xsxph8kpxj0f.cloudfront.net/310519663257025837/JUiL9uNgzLcukwfiCo6W6y/favicon-branda-v3_6bc0017a.png";
 
 const APP_NAME = "Dra Branda";
 

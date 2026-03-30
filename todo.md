@@ -86,3 +86,15 @@
 - [x] Poder agregar nueva entry (visita) desde el perfil del paciente
 - [x] Módulo Estadísticas: página "Próximamente" (coming soon)
 - [x] Dashboard simplificado como página de inicio
+
+## Nuevo Logo
+- [x] Quitar fondo del logo (galgo + gato)
+- [x] Crear versión favicon (recortada/cuadrada)
+- [x] Subir a CDN con manus-upload-file --webdev
+- [x] Actualizar logo en sidebar, login page, y favicon
+
+## Formulario Nuevo Paciente - Rediseño
+- [x] Reemplazar diálogo pequeño por página completa para nuevo paciente
+- [x] Selector de Familiar: campo de texto buscable (combobox), no dropdown chico
+- [x] Formulario ocupa toda la pantalla en desktop y optimizado para móvil
+- [x] Opción de crear familiar nuevo inline desde el combobox
