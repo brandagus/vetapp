@@ -39,6 +39,7 @@ export const appointmentsRouter = router({
           petName: appointments.petName,
           petSpecies: appointments.petSpecies,
           visitId: appointments.visitId,
+          googleCalendarEventId: appointments.googleCalendarEventId,
           createdAt: appointments.createdAt,
           // Joined fields
           ownerName: owners.name,

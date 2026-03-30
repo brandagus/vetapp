@@ -98,3 +98,13 @@
 - [x] Selector de Familiar: campo de texto buscable (combobox), no dropdown chico
 - [x] Formulario ocupa toda la pantalla en desktop y optimizado para móvil
 - [x] Opción de crear familiar nuevo inline desde el combobox
+
+## Integración Google Calendar - Turnos
+- [x] Investigar mejor approach para Google Calendar API
+- [x] Configurar credenciales Google OAuth2 (Client ID + Secret)
+- [x] Crear lógica server-side para sincronizar turnos con Google Calendar
+- [x] Al crear turno → crear evento en Google Calendar (auto-sync)
+- [x] Al actualizar/cancelar turno → actualizar/cancelar evento en Google Calendar
+- [x] UI: botón para conectar/desconectar Google Calendar
+- [x] UI: indicador de sincronización + botón actualizar por turno
+- [x] 11 tests pasando, TypeScript sin errores

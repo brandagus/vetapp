@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
   Calendar,
@@ -32,8 +33,9 @@ import {
   Check,
   X,
   CheckCheck,
-  LayoutGrid,
-  List,
+  Link2,
+  Unlink,
+  RefreshCw,
 } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -56,6 +58,7 @@ import {
 import { es } from "date-fns/locale";
 import { AppointmentStatusBadge } from "@/components/StatusBadge";
 import { cn } from "@/lib/utils";
+import { useSearch } from "wouter";
 
 const appointmentSchema = z.object({
   ownerId: z.number().optional(),
@@ -81,7 +84,55 @@ export default function Turnos() {
   const [showCreate, setShowCreate] = useState(false);
   const [selectedAppt, setSelectedAppt] = useState<number | null>(null);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  const [syncingId, setSyncingId] = useState<number | null>(null);
   const utils = trpc.useUtils();
+  const searchString = useSearch();
+
+  // Check for Google Calendar connection callback
+  useEffect(() => {
+    const params = new URLSearchParams(searchString);
+    if (params.get("gcal") === "connected") {
+      toast.success("Google Calendar conectado exitosamente");
+      window.history.replaceState({}, "", "/turnos");
+    } else if (params.get("gcal") === "error") {
+      toast.error("Error al conectar Google Calendar");
+      window.history.replaceState({}, "", "/turnos");
+    }
+  }, [searchString]);
+
+  // Google Calendar status
+  const { data: gcalStatus } = trpc.googleCalendar.status.useQuery();
+  const connectGcal = trpc.googleCalendar.getAuthUrl.useMutation({
+    onSuccess: (data) => {
+      window.location.href = data.url;
+    },
+    onError: () => toast.error("Error al conectar con Google"),
+  });
+  const disconnectGcal = trpc.googleCalendar.disconnect.useMutation({
+    onSuccess: () => {
+      utils.googleCalendar.status.invalidate();
+      toast.success("Google Calendar desconectado");
+    },
+  });
+  const syncAppt = trpc.googleCalendar.syncAppointment.useMutation({
+    onSuccess: (data) => {
+      if (data.success) {
+        utils.appointments.list.invalidate();
+        toast.success("Turno sincronizado con Google Calendar");
+      } else {
+        toast.error("No se pudo sincronizar el turno");
+      }
+      setSyncingId(null);
+    },
+    onError: () => {
+      toast.error("Error al sincronizar");
+      setSyncingId(null);
+    },
+  });
+  const updateGcalAppt = trpc.googleCalendar.updateAppointment.useMutation({
+    onSuccess: () => toast.success("Evento actualizado en Google Calendar"),
+    onError: () => toast.error("Error al actualizar en Google Calendar"),
+  });
 
   // Compute date range for query
   const dateRange = useMemo(() => {
@@ -104,21 +155,35 @@ export default function Turnos() {
   const { data: pets } = trpc.pets.list.useQuery(undefined);
 
   const createMutation = trpc.appointments.create.useMutation({
-    onSuccess: () => {
+    onSuccess: (data) => {
       utils.appointments.list.invalidate();
       utils.dashboard.getSummary.invalidate();
       setShowCreate(false);
       reset();
       toast.success("Turno creado");
+      // Auto-sync to Google Calendar if connected
+      if (gcalStatus?.connected && data.id) {
+        syncAppt.mutate({
+          appointmentId: data.id,
+          origin: window.location.origin,
+        });
+      }
     },
     onError: () => toast.error("Error al crear el turno"),
   });
 
   const updateStatusMutation = trpc.appointments.updateStatus.useMutation({
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       utils.appointments.list.invalidate();
       utils.dashboard.getSummary.invalidate();
       toast.success("Estado actualizado");
+      // Auto-update in Google Calendar if connected
+      if (gcalStatus?.connected) {
+        updateGcalAppt.mutate({
+          appointmentId: variables.id,
+          origin: window.location.origin,
+        });
+      }
     },
     onError: () => toast.error("Error al actualizar el estado"),
   });
@@ -178,6 +243,14 @@ export default function Turnos() {
 
   const titleCapitalized = title.charAt(0).toUpperCase() + title.slice(1);
 
+  const handleSyncToGcal = (appointmentId: number) => {
+    setSyncingId(appointmentId);
+    syncAppt.mutate({
+      appointmentId,
+      origin: window.location.origin,
+    });
+  };
+
   return (
     <div className="space-y-5 max-w-5xl">
       {/* Header */}
@@ -188,7 +261,45 @@ export default function Turnos() {
             Turnos
           </h1>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center flex-wrap">
+          {/* Google Calendar connection badge */}
+          {gcalStatus?.connected ? (
+            <Badge
+              variant="outline"
+              className="text-green-700 border-green-300 bg-green-50 gap-1 cursor-pointer hover:bg-green-100 transition-colors"
+              onClick={() => {
+                if (confirm("¿Desconectar Google Calendar?")) {
+                  disconnectGcal.mutate();
+                }
+              }}
+            >
+              <Link2 className="h-3 w-3" />
+              Google Calendar
+            </Badge>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs"
+              onClick={() =>
+                connectGcal.mutate({ origin: window.location.origin })
+              }
+              disabled={connectGcal.isPending}
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
+                <path d="M18.316 5.684H24v12.632h-5.684V5.684z" fill="#1A73E8"/>
+                <path d="M5.684 18.316V24H0v-5.684h5.684z" fill="#EA4335"/>
+                <path d="M5.684 5.684H0V0h5.684v5.684z" fill="#4285F4"/>
+                <path d="M18.316 5.684V0H24v5.684h-5.684z" fill="#188038"/>
+                <path d="M18.316 18.316H24V24h-5.684v-5.684z" fill="#FBBC04"/>
+                <path d="M5.684 18.316H0V24h5.684v-5.684z" fill="#EA4335"/>
+                <path d="M5.684 5.684h12.632v12.632H5.684V5.684z" fill="#fff"/>
+                <path d="M8.4 15.2l1.2-1.2 1.8 1.8 3.8-3.8 1.2 1.2-5 5-3-3z" fill="#1A73E8"/>
+              </svg>
+              Conectar Google Calendar
+            </Button>
+          )}
+
           <div className="flex rounded-lg border overflow-hidden">
             <button
               className={cn("px-3 py-1.5 text-xs font-medium transition-colors", viewMode === "month" ? "bg-primary text-primary-foreground" : "hover:bg-muted")}
@@ -450,6 +561,46 @@ export default function Turnos() {
                 <p className="text-sm text-muted-foreground italic">{selectedApptData.notes}</p>
               )}
 
+              {/* Google Calendar sync button */}
+              {gcalStatus?.connected && (
+                <div className="pt-2 border-t">
+                  {selectedApptData.googleCalendarEventId ? (
+                    <div className="flex items-center gap-2 text-xs text-green-700">
+                      <Link2 className="h-3.5 w-3.5" />
+                      <span>Sincronizado con Google Calendar</span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 text-xs ml-auto"
+                        onClick={() => updateGcalAppt.mutate({
+                          appointmentId: selectedApptData.id,
+                          origin: window.location.origin,
+                        })}
+                        disabled={updateGcalAppt.isPending}
+                      >
+                        <RefreshCw className={cn("h-3 w-3 mr-1", updateGcalAppt.isPending && "animate-spin")} />
+                        Actualizar
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full text-xs gap-1.5"
+                      onClick={() => handleSyncToGcal(selectedApptData.id)}
+                      disabled={syncingId === selectedApptData.id}
+                    >
+                      {syncingId === selectedApptData.id ? (
+                        <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Link2 className="h-3.5 w-3.5" />
+                      )}
+                      Sincronizar con Google Calendar
+                    </Button>
+                  )}
+                </div>
+              )}
+
               {/* Status actions */}
               <div className="pt-2 border-t">
                 <p className="text-xs text-muted-foreground mb-2">Cambiar estado:</p>
@@ -512,7 +663,7 @@ export default function Turnos() {
           <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>Propietario existente</Label>
+                <Label>Familiar existente</Label>
                 <Controller
                   name="ownerId"
                   control={control}
@@ -545,7 +696,7 @@ export default function Turnos() {
                 <Input {...register("clientPhone")} placeholder="+54 11..." />
               </div>
               <div className="space-y-1.5">
-                <Label>Nombre de la mascota</Label>
+                <Label>Nombre de mascota</Label>
                 <Input {...register("petName")} placeholder="Ej: Firulais" />
               </div>
             </div>
@@ -602,6 +753,13 @@ export default function Turnos() {
               <Label>Notas</Label>
               <Textarea {...register("notes")} rows={2} placeholder="Observaciones..." />
             </div>
+
+            {gcalStatus?.connected && (
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-green-50 text-green-700 text-xs">
+                <Link2 className="h-3.5 w-3.5" />
+                Se sincronizará automáticamente con Google Calendar
+              </div>
+            )}
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setShowCreate(false)}>

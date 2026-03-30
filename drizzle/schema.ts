@@ -123,12 +123,28 @@ export const appointments = mysqlTable("appointments", {
     .notNull(),
   notes: text("notes"),
   visitId: int("visitId").references(() => visits.id), // linked after completion
+  googleCalendarEventId: varchar("googleCalendarEventId", { length: 255 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
 export type Appointment = typeof appointments.$inferSelect;
 export type InsertAppointment = typeof appointments.$inferInsert;
+
+// ─── Google Calendar Tokens ──────────────────────────────────────────────────
+export const googleTokens = mysqlTable("google_tokens", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id),
+  accessToken: text("accessToken").notNull(),
+  refreshToken: text("refreshToken"),
+  expiresAt: timestamp("expiresAt"),
+  calendarId: varchar("calendarId", { length: 255 }).default("primary"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type GoogleToken = typeof googleTokens.$inferSelect;
+export type InsertGoogleToken = typeof googleTokens.$inferInsert;
 
 // ─── Payments (pagos) ─────────────────────────────────────────────────────────
 export const payments = mysqlTable("payments", {
