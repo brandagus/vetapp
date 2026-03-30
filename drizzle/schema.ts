@@ -77,6 +77,9 @@ export const visits = mysqlTable("visits", {
   nextSteps: text("nextSteps"),
   weight: decimal("weight", { precision: 5, scale: 2 }), // peso en la visita
   temperature: decimal("temperature", { precision: 4, scale: 1 }), // temperatura corporal
+  heartRate: varchar("heartRate", { length: 20 }), // frecuencia cardíaca
+  respRate: varchar("respRate", { length: 20 }), // frecuencia respiratoria
+  bodyCondition: varchar("bodyCondition", { length: 20 }), // condición corporal (1-9)
   notes: text("notes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

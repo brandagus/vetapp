@@ -2,7 +2,7 @@ import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { visits, visitAttachments, pets, owners } from "../../drizzle/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, or, like } from "drizzle-orm";
 import { storagePut } from "../storage";
 import { nanoid } from "nanoid";
 
@@ -67,7 +67,7 @@ export const visitsRouter = router({
       z.object({
         petId: z.number(),
         ownerId: z.number(),
-        visitDate: z.string(), // ISO string
+        visitDate: z.string(),
         reason: z.string().min(1),
         diagnosis: z.string().optional(),
         treatment: z.string().optional(),
@@ -75,6 +75,9 @@ export const visitsRouter = router({
         nextSteps: z.string().optional(),
         weight: z.string().optional(),
         temperature: z.string().optional(),
+        heartRate: z.string().optional(),
+        respRate: z.string().optional(),
+        bodyCondition: z.string().optional(),
         notes: z.string().optional(),
       })
     )
@@ -92,6 +95,9 @@ export const visitsRouter = router({
         nextSteps: input.nextSteps ?? null,
         weight: input.weight ?? null,
         temperature: input.temperature ?? null,
+        heartRate: input.heartRate ?? null,
+        respRate: input.respRate ?? null,
+        bodyCondition: input.bodyCondition ?? null,
         notes: input.notes ?? null,
       });
       return { id: result.insertId };
@@ -109,6 +115,9 @@ export const visitsRouter = router({
         nextSteps: z.string().optional(),
         weight: z.string().optional(),
         temperature: z.string().optional(),
+        heartRate: z.string().optional(),
+        respRate: z.string().optional(),
+        bodyCondition: z.string().optional(),
         notes: z.string().optional(),
       })
     )

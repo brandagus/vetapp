@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
@@ -21,7 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { PawPrint, Search, Plus, ChevronRight, Upload } from "lucide-react";
+import { PawPrint, Search, Plus, ChevronRight, User, Phone } from "lucide-react";
 import { useLocation, useSearch } from "wouter";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -43,6 +45,16 @@ type PetForm = z.infer<typeof petSchema>;
 
 const speciesOptions = ["Perro", "Gato", "Conejo", "Ave", "Reptil", "Otro"];
 
+function speciesEmoji(species: string): string {
+  const s = species.toLowerCase();
+  if (s.includes("perro") || s.includes("can")) return "🐕";
+  if (s.includes("gato") || s.includes("felin")) return "🐈";
+  if (s.includes("ave") || s.includes("pájaro") || s.includes("pajaro")) return "🐦";
+  if (s.includes("conejo")) return "🐇";
+  if (s.includes("reptil")) return "🦎";
+  return "🐾";
+}
+
 export default function Mascotas() {
   const [, setLocation] = useLocation();
   const search = useSearch();
@@ -50,6 +62,7 @@ export default function Mascotas() {
   const preselectedOwnerId = params.get("ownerId") ? parseInt(params.get("ownerId")!) : undefined;
 
   const [searchText, setSearchText] = useState("");
+  const [speciesFilter, setSpeciesFilter] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(!!preselectedOwnerId);
   const utils = trpc.useUtils();
 
@@ -61,10 +74,10 @@ export default function Mascotas() {
       utils.pets.list.invalidate();
       setShowCreate(false);
       reset();
-      toast.success("Mascota registrada");
+      toast.success("Paciente registrado");
       setLocation(`/mascotas/${data.id}`);
     },
-    onError: () => toast.error("Error al registrar la mascota"),
+    onError: () => toast.error("Error al registrar"),
   });
 
   const { register, handleSubmit, reset, control, formState: { errors } } = useForm<PetForm>({
@@ -79,12 +92,28 @@ export default function Mascotas() {
     createMutation.mutate(data);
   };
 
-  const filteredPets = pets?.filter(pet =>
-    !searchText ||
-    pet.name.toLowerCase().includes(searchText.toLowerCase()) ||
-    pet.species.toLowerCase().includes(searchText.toLowerCase()) ||
-    (pet.ownerName ?? "").toLowerCase().includes(searchText.toLowerCase())
-  );
+  // Get unique species for filter chips
+  const speciesList = useMemo(() => {
+    if (!pets) return [];
+    const set = new Set(pets.map((p) => p.species));
+    return Array.from(set).sort();
+  }, [pets]);
+
+  // Filter
+  const filteredPets = useMemo(() => {
+    if (!pets) return [];
+    return pets.filter((pet) => {
+      const matchesSearch =
+        !searchText ||
+        pet.name.toLowerCase().includes(searchText.toLowerCase()) ||
+        pet.species.toLowerCase().includes(searchText.toLowerCase()) ||
+        (pet.breed ?? "").toLowerCase().includes(searchText.toLowerCase()) ||
+        (pet.ownerName ?? "").toLowerCase().includes(searchText.toLowerCase()) ||
+        (pet.ownerPhone ?? "").includes(searchText);
+      const matchesSpecies = !speciesFilter || pet.species === speciesFilter;
+      return matchesSearch && matchesSpecies;
+    });
+  }, [pets, searchText, speciesFilter]);
 
   return (
     <div className="space-y-5 max-w-4xl">
@@ -93,15 +122,15 @@ export default function Mascotas() {
         <div>
           <h1 className="text-2xl font-bold font-display flex items-center gap-2">
             <PawPrint className="h-6 w-6 text-primary" />
-            Mascotas
+            Pacientes
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {filteredPets?.length ?? 0} mascotas registradas
+            {filteredPets.length} de {pets?.length ?? 0} pacientes
           </p>
         </div>
         <Button onClick={() => setShowCreate(true)} className="shrink-0">
           <Plus className="h-4 w-4 mr-1.5" />
-          Nueva
+          Nuevo
         </Button>
       </div>
 
@@ -109,29 +138,54 @@ export default function Mascotas() {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Buscar por nombre, especie o propietario..."
+          placeholder="Buscar por nombre, raza, dueño o teléfono..."
           value={searchText}
-          onChange={e => setSearchText(e.target.value)}
+          onChange={(e) => setSearchText(e.target.value)}
           className="pl-9"
         />
       </div>
 
+      {/* Species filter chips */}
+      {speciesList.length > 1 && (
+        <div className="flex flex-wrap gap-2">
+          <Badge
+            variant={speciesFilter === null ? "default" : "outline"}
+            className="cursor-pointer"
+            onClick={() => setSpeciesFilter(null)}
+          >
+            Todos
+          </Badge>
+          {speciesList.map((sp) => (
+            <Badge
+              key={sp}
+              variant={speciesFilter === sp ? "default" : "outline"}
+              className="cursor-pointer"
+              onClick={() => setSpeciesFilter(speciesFilter === sp ? null : sp)}
+            >
+              {speciesEmoji(sp)} {sp}
+            </Badge>
+          ))}
+        </div>
+      )}
+
       {/* List */}
       {isLoading ? (
         <div className="space-y-3">
-          {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-20 rounded-xl" />
+          ))}
         </div>
-      ) : filteredPets?.length === 0 ? (
+      ) : filteredPets.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
           <PawPrint className="h-12 w-12 mx-auto mb-3 opacity-20" />
-          <p className="font-medium">No se encontraron mascotas</p>
+          <p className="font-medium">No se encontraron pacientes</p>
           <p className="text-sm mt-1">
-            {searchText ? "Probá con otro término" : "Registrá la primera mascota"}
+            {searchText || speciesFilter ? "Probá con otro filtro" : "Registrá el primer paciente"}
           </p>
         </div>
       ) : (
         <div className="space-y-2">
-          {filteredPets?.map(pet => (
+          {filteredPets.map((pet) => (
             <Card
               key={pet.id}
               className="cursor-pointer hover:shadow-md transition-all hover:border-primary/30"
@@ -139,27 +193,35 @@ export default function Mascotas() {
             >
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
-                  {pet.photoUrl ? (
-                    <img
-                      src={pet.photoUrl}
-                      alt={pet.name}
-                      className="w-11 h-11 rounded-full object-cover shrink-0 border-2 border-border"
-                    />
-                  ) : (
-                    <div className="w-11 h-11 rounded-full bg-secondary flex items-center justify-center shrink-0">
-                      <PawPrint className="h-5 w-5 text-secondary-foreground" />
-                    </div>
-                  )}
+                  <Avatar className="h-12 w-12 border-2 border-border shrink-0">
+                    <AvatarImage src={pet.photoUrl ?? undefined} alt={pet.name} className="object-cover" />
+                    <AvatarFallback className="text-lg bg-primary/10">
+                      {speciesEmoji(pet.species)}
+                    </AvatarFallback>
+                  </Avatar>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm">{pet.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {pet.species}{pet.breed ? ` · ${pet.breed}` : ""}{" "}
-                      {pet.sex && pet.sex !== "desconocido" ? `· ${pet.sex}` : ""}
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-sm truncate">{pet.name}</p>
+                      <Badge variant="secondary" className="text-xs capitalize shrink-0">
+                        {pet.species}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {pet.breed && `${pet.breed} · `}
+                      {pet.sex && pet.sex !== "desconocido" ? `${pet.sex === "macho" ? "♂" : "♀"} · ` : ""}
+                      {pet.weight ? `${pet.weight} kg` : ""}
                     </p>
                     {pet.ownerName && (
-                      <p className="text-xs text-primary/80 mt-0.5">
-                        Dueño: {pet.ownerName}
-                      </p>
+                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <User className="h-3 w-3" /> {pet.ownerName}
+                        </span>
+                        {pet.ownerPhone && (
+                          <span className="flex items-center gap-1">
+                            <Phone className="h-3 w-3" /> {pet.ownerPhone}
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -174,7 +236,7 @@ export default function Mascotas() {
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Nueva mascota</DialogTitle>
+            <DialogTitle>Nuevo paciente</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Owner */}
@@ -186,13 +248,13 @@ export default function Mascotas() {
                 render={({ field }) => (
                   <Select
                     value={field.value?.toString()}
-                    onValueChange={v => field.onChange(parseInt(v))}
+                    onValueChange={(v) => field.onChange(parseInt(v))}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Seleccioná un propietario" />
                     </SelectTrigger>
                     <SelectContent>
-                      {owners?.map(o => (
+                      {owners?.map((o) => (
                         <SelectItem key={o.id} value={o.id.toString()}>
                           {o.name}
                         </SelectItem>
@@ -201,14 +263,18 @@ export default function Mascotas() {
                   </Select>
                 )}
               />
-              {errors.ownerId && <p className="text-xs text-destructive">{errors.ownerId.message}</p>}
+              {errors.ownerId && (
+                <p className="text-xs text-destructive">{errors.ownerId.message}</p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Nombre *</Label>
                 <Input {...register("name")} placeholder="Ej: Firulais" />
-                {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
+                {errors.name && (
+                  <p className="text-xs text-destructive">{errors.name.message}</p>
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label>Especie *</Label>
@@ -221,14 +287,18 @@ export default function Mascotas() {
                         <SelectValue placeholder="Especie" />
                       </SelectTrigger>
                       <SelectContent>
-                        {speciesOptions.map(s => (
-                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                        {speciesOptions.map((s) => (
+                          <SelectItem key={s} value={s}>
+                            {speciesEmoji(s)} {s}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   )}
                 />
-                {errors.species && <p className="text-xs text-destructive">{errors.species.message}</p>}
+                {errors.species && (
+                  <p className="text-xs text-destructive">{errors.species.message}</p>
+                )}
               </div>
             </div>
 
@@ -248,8 +318,8 @@ export default function Mascotas() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="macho">Macho</SelectItem>
-                        <SelectItem value="hembra">Hembra</SelectItem>
+                        <SelectItem value="macho">♂ Macho</SelectItem>
+                        <SelectItem value="hembra">♀ Hembra</SelectItem>
                         <SelectItem value="desconocido">Desconocido</SelectItem>
                       </SelectContent>
                     </Select>
@@ -282,7 +352,11 @@ export default function Mascotas() {
 
             <div className="space-y-1.5">
               <Label>Notas</Label>
-              <Textarea {...register("notes")} placeholder="Observaciones, alergias, etc." rows={2} />
+              <Textarea
+                {...register("notes")}
+                placeholder="Observaciones, alergias, etc."
+                rows={2}
+              />
             </div>
 
             <DialogFooter>

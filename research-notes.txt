@@ -1,0 +1,50 @@
+VETERINARY CLINICAL RECORDS REDESIGN - RESEARCH NOTES
+
+== SOAP FORMAT (Industry Standard) ==
+- Subjective: Owner's complaint, history, symptoms reported
+- Objective: Physical exam findings, vitals (weight, temp, heart rate, resp rate), lab results
+- Assessment: Diagnosis or differential diagnoses
+- Plan: Treatment plan, medications, follow-up, next steps
+
+== PATIENT HEALTH CARD (Digitail Pattern) ==
+Top header: Name, Species & Breed, Gender & Age, Weight (with trend arrow)
+Tags/Alerts: Color-coded alerts for allergies, conditions
+Sections: Preventive, Medications, Diagnostics, Diagnoses
+Internal notes: Private notes visible on appointment cards
+
+== KEY FIELDS FOR VET PATIENT PROFILE ==
+Required always visible:
+- Pet name, species, breed, sex, age/birthdate
+- Owner name, phone, email, address
+- Photo
+- Reproductive status (castrado/entero)
+- Last visit date
+- Last payment status
+
+== DYNAMIC VISIT FORM DESIGN ==
+Always present fields:
+- Date (auto-filled to now)
+- Time (auto-filled to now)
+- Reason/motive (motivo de consulta)
+- Free-text clinical notes (SOAP or free format)
+
+Optional fields (added via + button):
+- Weight (kg)
+- Temperature (°C)
+- Heart rate (bpm)
+- Respiratory rate (rpm)
+- Body condition score (1-9)
+- Mucous membranes
+- Hydration status
+- Medications prescribed
+- Diagnosis
+- Next steps / follow-up
+- Lab results notes
+
+== UX PATTERNS ==
+- Dynamic fields: Show a (+) button that opens a picker to add optional fields
+- Fields that aren't added don't show as empty — they simply don't appear
+- Each added field can be removed with an (x) button
+- Auto-fill: When creating a visit, date/time pre-filled to current
+- Search: Unified search bar that searches across owner name, pet name, species
+- Filter chips: Quick filters for species (Perro, Gato, etc.)

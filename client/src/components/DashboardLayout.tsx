@@ -33,12 +33,19 @@ import {
   DollarSign,
   LogOut,
   PanelLeft,
-  Stethoscope,
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from "./DashboardLayoutSkeleton";
 import { Button } from "./ui/button";
+
+const LOGO_URL =
+  "https://d2xsxph8kpxj0f.cloudfront.net/310519663257025837/JUiL9uNgzLcukwfiCo6W6y/logo-branda-dSDxQfhEDdCSAronx4QXoz.webp";
+const FAVICON_URL =
+  "https://d2xsxph8kpxj0f.cloudfront.net/310519663257025837/JUiL9uNgzLcukwfiCo6W6y/favicon-branda-TouXYfgoVP6Wwu6apagXQY.webp";
+
+const APP_NAME = "Dra Branda";
+const APP_SUBTITLE = "Veterinaria a Domicilio";
 
 const menuGroups = [
   {
@@ -93,13 +100,17 @@ export default function DashboardLayout({
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="flex flex-col items-center gap-8 p-8 max-w-md w-full">
           <div className="flex flex-col items-center gap-4">
-            <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10">
-              <Stethoscope className="h-8 w-8 text-primary" />
-            </div>
+            <img
+              src={LOGO_URL}
+              alt="Dra Branda Veterinaria"
+              className="w-24 h-24 object-contain"
+            />
             <div className="text-center">
-              <h1 className="text-2xl font-bold tracking-tight">VetApp</h1>
+              <h1 className="text-2xl font-bold tracking-tight font-display">
+                Dra Branda Veterinaria
+              </h1>
               <p className="text-sm text-muted-foreground mt-1">
-                Gestión Veterinaria a Domicilio
+                Veterinaria a Domicilio
               </p>
             </div>
             <p className="text-sm text-muted-foreground text-center max-w-sm mt-2">
@@ -155,7 +166,7 @@ function DashboardLayoutContent({
   const activeLabel = menuGroups
     .flatMap(g => g.items)
     .find(item => item.path === location || (item.path !== "/" && location.startsWith(item.path)))
-    ?.label ?? "VetApp";
+    ?.label ?? "Dra Branda";
 
   useEffect(() => {
     if (isCollapsed) setIsResizing(false);
@@ -198,9 +209,13 @@ function DashboardLayoutContent({
               </button>
               {!isCollapsed && (
                 <div className="flex items-center gap-2 min-w-0">
-                  <Stethoscope className="h-5 w-5 text-sidebar-primary shrink-0" />
+                  <img
+                    src={FAVICON_URL}
+                    alt="Logo"
+                    className="h-7 w-7 rounded-md object-contain shrink-0"
+                  />
                   <span className="font-bold text-sidebar-foreground tracking-tight truncate font-display">
-                    VetApp
+                    {APP_NAME}
                   </span>
                 </div>
               )}
@@ -288,7 +303,11 @@ function DashboardLayoutContent({
             <div className="flex items-center gap-2">
               <SidebarTrigger className="h-9 w-9 rounded-lg" />
               <div className="flex items-center gap-2">
-                <Stethoscope className="h-4 w-4 text-primary" />
+                <img
+                  src={FAVICON_URL}
+                  alt="Logo"
+                  className="h-5 w-5 rounded-sm object-contain"
+                />
                 <span className="font-semibold text-sm">{activeLabel}</span>
               </div>
             </div>

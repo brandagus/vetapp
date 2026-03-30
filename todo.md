@@ -54,3 +54,25 @@
 - [x] Responsividad móvil: sidebar colapsable, header sticky en móvil
 - [x] Todo el contenido en español
 - [x] Checkpoint final y entrega
+
+## Rebranding
+- [x] Cambiar nombre de app a "Dra Branda Veterinaria" en todo el código
+- [x] Actualizar VITE_APP_TITLE
+- [x] Actualizar sidebar, login page, y todas las referencias visibles
+- [x] Generar logo con animalito tierno (critter) para la app
+- [x] Generar favicon con el mismo estilo
+- [x] Usar íconos de estilo cute/critter en la navegación del sidebar
+- [x] Subir assets a CDN con manus-upload-file --webdev
+
+## Rediseño Historia Clínica y Perfiles
+- [x] Investigar mejores prácticas de historias clínicas veterinarias
+- [x] Rediseñar perfil de paciente: foto, info general, dueño completo, última visita, último pago
+- [x] Header de paciente con auto-llenado (buscar por nombre/ID y se completa todo)
+- [x] Info del dueño en perfil: nombre, teléfono, email, dirección
+- [x] Formulario de visita con campos dinámicos (+) para agregar en tiempo real
+- [x] Campos opcionales: peso, altura, temperatura, etc. (no aparecen vacíos)
+- [x] Campo de texto libre para notas clínicas
+- [x] Campos fijos: fecha, hora, motivo de consulta
+- [x] Auto-relleno de fecha/hora al crear visita
+- [x] Buscador/filtro inteligente: por nombre de dueño, nombre de mascota, especie
+- [x] Filtros por especie (perro, gato, etc.)

@@ -16,6 +16,7 @@ import Historial from "./pages/Historial";
 import VisitaDetalle from "./pages/VisitaDetalle";
 import Turnos from "./pages/Turnos";
 import Finanzas from "./pages/Finanzas";
+import NuevaVisita from "./pages/NuevaVisita";
 
 function AppRoutes() {
   return (
@@ -26,8 +27,9 @@ function AppRoutes() {
         <Route path="/propietarios/:id" component={PropietarioDetalle} />
         <Route path="/mascotas" component={Mascotas} />
         <Route path="/mascotas/:id" component={MascotaDetalle} />
+        <Route path="/mascotas/:id/nueva-visita" component={NuevaVisita} />
         <Route path="/historial" component={Historial} />
-        <Route path="/historial/visita/:id" component={VisitaDetalle} />
+        <Route path="/historial/:id" component={VisitaDetalle} />
         <Route path="/turnos" component={Turnos} />
         <Route path="/finanzas" component={Finanzas} />
         <Route path="/404" component={NotFound} />
