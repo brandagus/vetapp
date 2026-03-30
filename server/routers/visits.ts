@@ -78,6 +78,10 @@ export const visitsRouter = router({
         heartRate: z.string().optional(),
         respRate: z.string().optional(),
         bodyCondition: z.string().optional(),
+        mucosas: z.enum(["rosadas", "palidas", "ictericas", "cianoticas"]).optional(),
+        hydration: z.enum(["normal", "leve", "moderada", "severa"]).optional(),
+        lymphNodes: z.enum(["normal", "aumentados"]).optional(),
+        dentalStatus: z.enum(["bueno", "regular", "malo"]).optional(),
         notes: z.string().optional(),
       })
     )
@@ -98,6 +102,10 @@ export const visitsRouter = router({
         heartRate: input.heartRate ?? null,
         respRate: input.respRate ?? null,
         bodyCondition: input.bodyCondition ?? null,
+        mucosas: input.mucosas ?? null,
+        hydration: input.hydration ?? null,
+        lymphNodes: input.lymphNodes ?? null,
+        dentalStatus: input.dentalStatus ?? null,
         notes: input.notes ?? null,
       });
       return { id: result.insertId };
@@ -118,6 +126,10 @@ export const visitsRouter = router({
         heartRate: z.string().optional(),
         respRate: z.string().optional(),
         bodyCondition: z.string().optional(),
+        mucosas: z.enum(["rosadas", "palidas", "ictericas", "cianoticas"]).optional(),
+        hydration: z.enum(["normal", "leve", "moderada", "severa"]).optional(),
+        lymphNodes: z.enum(["normal", "aumentados"]).optional(),
+        dentalStatus: z.enum(["bueno", "regular", "malo"]).optional(),
         notes: z.string().optional(),
       })
     )

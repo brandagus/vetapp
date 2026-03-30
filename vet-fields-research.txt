@@ -1,0 +1,74 @@
+# Veterinary Clinical History & Vaccination Research
+
+## PATIENT ONBOARDING FIELDS (from professional templates)
+
+### Basic Info (already have)
+- Nombre, Especie, Raza, Sexo, Fecha nacimiento/Edad, Color/Pelaje
+
+### New Fields to Add - Patient Profile
+- Peso actual
+- Microchip (número)
+- Esterilizado/Castrado (sí/no/no sé)
+- Tipo de paciente: Visita única / Seguimiento
+
+### Anamnesis Pretérita (Background/Environment)
+- Ambiente: Interior / Exterior / Mixto
+- Convive con otros animales (sí/no, cuáles)
+- Alimentación: Balanceado / Casera / Mixta / BARF / Otra
+- Marca de alimento (texto libre)
+- Alergias conocidas (texto libre)
+- Enfermedades previas (texto libre)
+- Cirugías previas (texto libre)
+- Medicación actual (texto libre)
+- Desparasitación: última fecha, producto usado
+- Comportamiento general: Tranquilo / Nervioso / Agresivo / Miedoso
+
+## VACCINATION MODULE
+
+### Common Vaccines - Dogs (Argentina)
+- Quíntuple/Séxtuple (Moquillo, Parvovirus, Hepatitis, Parainfluenza, Leptospirosis)
+- Antirrábica
+- Tos de las perreras (Bordetella)
+- Giardia
+
+### Common Vaccines - Cats (Argentina)
+- Triple felina (Panleucopenia, Rinotraqueitis, Calicivirus)
+- Antirrábica
+- Leucemia felina (FeLV)
+
+### Vaccination Record Fields
+- Nombre de la vacuna
+- Laboratorio/Marca (opcional)
+- Número de lote (opcional)
+- Dosis número (1ra, 2da, refuerzo, anual)
+- Fecha de aplicación
+- Próxima dosis (fecha)
+- Notas (texto libre)
+- Estado: Aplicada / Programada / Vencida
+
+### Alert Logic
+- Si próxima dosis < hoy → VENCIDA (rojo)
+- Si próxima dosis < hoy + 7 días → PRÓXIMA (amarillo)
+- Si aplicada y sin próxima → COMPLETA (verde)
+
+## VISIT FORM IMPROVEMENTS
+
+### Examen Físico (all optional, dynamic +)
+- Peso (kg)
+- Temperatura (°C)
+- Frecuencia cardíaca (lpm)
+- Frecuencia respiratoria (rpm)
+- Condición corporal (1-9 escala)
+- Mucosas (rosadas/pálidas/ictéricas/cianóticas)
+- Hidratación (normal/deshidratado leve/moderado/severo)
+- Ganglios linfáticos (normal/aumentados)
+- Estado dental (bueno/regular/malo)
+
+### Already have
+- Motivo de consulta
+- Diagnóstico
+- Tratamiento
+- Medicamentos
+- Próximos pasos
+- Notas libres
+- Adjuntos (fotos, lab)

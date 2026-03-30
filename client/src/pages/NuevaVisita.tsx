@@ -9,42 +9,63 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
 import { toast } from "sonner";
 import {
-  ArrowLeft,
-  Plus,
-  X,
-  Calendar,
-  Clock,
-  Stethoscope,
-  Weight,
-  Thermometer,
-  Heart,
-  Activity,
-  FileText,
-  Save,
-  Loader2,
+  ArrowLeft, Plus, X, Calendar, Stethoscope, Weight, Thermometer,
+  Heart, Activity, FileText, Save, Loader2, Eye, Droplets, CircleDot, Smile,
 } from "lucide-react";
 import { useState, useMemo } from "react";
 
-// All possible optional fields
-const OPTIONAL_FIELDS = [
-  { key: "weight", label: "Peso (kg)", icon: Weight, placeholder: "ej: 12.5" },
-  { key: "temperature", label: "Temperatura (°C)", icon: Thermometer, placeholder: "ej: 38.5" },
-  { key: "heartRate", label: "Frec. cardíaca (lpm)", icon: Heart, placeholder: "ej: 120" },
-  { key: "respRate", label: "Frec. respiratoria (rpm)", icon: Activity, placeholder: "ej: 24" },
-  { key: "bodyCondition", label: "Condición corporal (1-9)", icon: FileText, placeholder: "ej: 5" },
-  { key: "diagnosis", label: "Diagnóstico", icon: Stethoscope, placeholder: "Diagnóstico...", multiline: true },
-  { key: "treatment", label: "Tratamiento", icon: FileText, placeholder: "Tratamiento aplicado...", multiline: true },
-  { key: "medications", label: "Medicación", icon: FileText, placeholder: "Medicamentos recetados...", multiline: true },
-  { key: "nextSteps", label: "Próximos pasos", icon: Calendar, placeholder: "Seguimiento, controles...", multiline: true },
-] as const;
+// ── All optional fields with types ──
+type FieldDef = {
+  key: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  placeholder: string;
+  type: "text" | "textarea" | "select";
+  options?: { value: string; label: string }[];
+};
 
-type FieldKey = typeof OPTIONAL_FIELDS[number]["key"];
+const OPTIONAL_FIELDS: FieldDef[] = [
+  // Signos vitales
+  { key: "weight", label: "Peso (kg)", icon: Weight, placeholder: "ej: 12.5", type: "text" },
+  { key: "temperature", label: "Temperatura (°C)", icon: Thermometer, placeholder: "ej: 38.5", type: "text" },
+  { key: "heartRate", label: "Frec. cardíaca (lpm)", icon: Heart, placeholder: "ej: 120", type: "text" },
+  { key: "respRate", label: "Frec. respiratoria (rpm)", icon: Activity, placeholder: "ej: 24", type: "text" },
+  { key: "bodyCondition", label: "Condición corporal (1-9)", icon: FileText, placeholder: "ej: 5", type: "text" },
+  // Examen físico
+  { key: "mucosas", label: "Mucosas", icon: Eye, placeholder: "", type: "select", options: [
+    { value: "rosadas", label: "Rosadas (normal)" }, { value: "palidas", label: "Pálidas" },
+    { value: "ictericas", label: "Ictéricas" }, { value: "cianoticas", label: "Cianóticas" },
+  ]},
+  { key: "hydration", label: "Hidratación", icon: Droplets, placeholder: "", type: "select", options: [
+    { value: "normal", label: "Normal" }, { value: "leve", label: "Deshidratación leve" },
+    { value: "moderada", label: "Deshidratación moderada" }, { value: "severa", label: "Deshidratación severa" },
+  ]},
+  { key: "lymphNodes", label: "Ganglios linfáticos", icon: CircleDot, placeholder: "", type: "select", options: [
+    { value: "normal", label: "Normal" }, { value: "aumentados", label: "Aumentados" },
+  ]},
+  { key: "dentalStatus", label: "Estado dental", icon: Smile, placeholder: "", type: "select", options: [
+    { value: "bueno", label: "Bueno" }, { value: "regular", label: "Regular" }, { value: "malo", label: "Malo" },
+  ]},
+  // Clínico
+  { key: "diagnosis", label: "Diagnóstico", icon: Stethoscope, placeholder: "Diagnóstico...", type: "textarea" },
+  { key: "treatment", label: "Tratamiento", icon: FileText, placeholder: "Tratamiento aplicado...", type: "textarea" },
+  { key: "medications", label: "Medicación", icon: FileText, placeholder: "Medicamentos recetados...", type: "textarea" },
+  { key: "nextSteps", label: "Próximos pasos", icon: Calendar, placeholder: "Seguimiento, controles...", type: "textarea" },
+];
+
+// Group fields for the popover
+const FIELD_GROUPS = [
+  { title: "Signos vitales", keys: ["weight", "temperature", "heartRate", "respRate", "bodyCondition"] },
+  { title: "Examen físico", keys: ["mucosas", "hydration", "lymphNodes", "dentalStatus"] },
+  { title: "Clínico", keys: ["diagnosis", "treatment", "medications", "nextSteps"] },
+];
 
 function speciesEmoji(species: string): string {
   const s = species.toLowerCase();
@@ -75,22 +96,30 @@ export default function NuevaVisita() {
   const [visitDate, setVisitDate] = useState(nowLocalISO());
   const [reason, setReason] = useState("");
   const [notes, setNotes] = useState("");
-  const [activeFields, setActiveFields] = useState<Set<FieldKey>>(new Set());
+  const [activeFields, setActiveFields] = useState<Set<string>>(new Set());
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [addFieldOpen, setAddFieldOpen] = useState(false);
 
-  // Available fields to add (not yet active)
   const availableFields = useMemo(
     () => OPTIONAL_FIELDS.filter((f) => !activeFields.has(f.key)),
     [activeFields]
   );
 
-  const addField = (key: FieldKey) => {
+  const addField = (key: string) => {
     setActiveFields((prev) => new Set(prev).add(key));
     setAddFieldOpen(false);
   };
 
-  const removeField = (key: FieldKey) => {
+  const addAllInGroup = (keys: string[]) => {
+    setActiveFields((prev) => {
+      const next = new Set(prev);
+      keys.forEach((k) => next.add(k));
+      return next;
+    });
+    setAddFieldOpen(false);
+  };
+
+  const removeField = (key: string) => {
     setActiveFields((prev) => {
       const next = new Set(prev);
       next.delete(key);
@@ -130,11 +159,15 @@ export default function NuevaVisita() {
         heartRate: fieldValues.heartRate || undefined,
         respRate: fieldValues.respRate || undefined,
         bodyCondition: fieldValues.bodyCondition || undefined,
+        mucosas: (fieldValues.mucosas as "rosadas" | "palidas" | "ictericas" | "cianoticas") || undefined,
+        hydration: (fieldValues.hydration as "normal" | "leve" | "moderada" | "severa") || undefined,
+        lymphNodes: (fieldValues.lymphNodes as "normal" | "aumentados") || undefined,
+        dentalStatus: (fieldValues.dentalStatus as "bueno" | "regular" | "malo") || undefined,
       });
       toast.success("Visita registrada");
       utils.visits.listByPet.invalidate({ petId });
       utils.pets.getProfile.invalidate({ id: petId });
-      setLocation(`/historial/${result.id}`);
+      setLocation(`/visita/${result.id}`);
     } catch {
       toast.error("Error al guardar la visita");
     }
@@ -153,23 +186,16 @@ export default function NuevaVisita() {
   if (!pet) {
     return (
       <div className="max-w-3xl">
-        <Button variant="ghost" onClick={() => setLocation("/pacientes")}>
-          <ArrowLeft className="h-4 w-4 mr-2" /> Volver
-        </Button>
+        <Button variant="ghost" onClick={() => setLocation("/pacientes")}><ArrowLeft className="h-4 w-4 mr-2" /> Volver</Button>
         <p className="text-muted-foreground mt-8 text-center">Paciente no encontrado.</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="max-w-3xl space-y-6 pb-8">
       {/* Back */}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => setLocation(`/pacientes/${petId}`)}
-        className="gap-2"
-      >
+      <Button variant="ghost" size="sm" onClick={() => setLocation(`/pacientes/${petId}`)} className="gap-2 -ml-2">
         <ArrowLeft className="h-4 w-4" /> Volver al perfil
       </Button>
 
@@ -179,20 +205,16 @@ export default function NuevaVisita() {
           <div className="flex items-center gap-4">
             <Avatar className="h-14 w-14 border-2 border-primary/20">
               <AvatarImage src={pet.photoUrl ?? undefined} alt={pet.name} className="object-cover" />
-              <AvatarFallback className="text-xl bg-primary/10">
-                {speciesEmoji(pet.species)}
-              </AvatarFallback>
+              <AvatarFallback className="text-xl bg-primary/10">{speciesEmoji(pet.species)}</AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-lg font-bold font-display">{pet.name}</h2>
-                <Badge variant="secondary" className="capitalize text-xs">
-                  {pet.species}
-                </Badge>
+                <Badge variant="secondary" className="capitalize text-xs">{pet.species}</Badge>
               </div>
               <p className="text-sm text-muted-foreground">
                 {pet.breed && `${pet.breed} · `}
-                Dueño: {pet.ownerName}
+                Familiar: {pet.ownerName}
                 {pet.ownerPhone && ` · ${pet.ownerPhone}`}
               </p>
             </div>
@@ -213,14 +235,9 @@ export default function NuevaVisita() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label className="flex items-center gap-1.5 mb-1.5">
-                <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                Fecha y hora *
+                <Calendar className="h-3.5 w-3.5 text-muted-foreground" /> Fecha y hora *
               </Label>
-              <Input
-                type="datetime-local"
-                value={visitDate}
-                onChange={(e) => setVisitDate(e.target.value)}
-              />
+              <Input type="datetime-local" value={visitDate} onChange={(e) => setVisitDate(e.target.value)} className="h-11" />
             </div>
           </div>
 
@@ -229,31 +246,17 @@ export default function NuevaVisita() {
           {/* Reason (always visible, required) */}
           <div>
             <Label className="flex items-center gap-1.5 mb-1.5">
-              <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-              Motivo de consulta *
+              <FileText className="h-3.5 w-3.5 text-muted-foreground" /> Motivo de consulta *
             </Label>
-            <Textarea
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="¿Por qué vino el paciente?"
-              rows={2}
-              className="resize-none"
-            />
+            <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="¿Por qué vino el paciente?" rows={2} className="resize-none" />
           </div>
 
           {/* Free-text clinical notes (always visible) */}
           <div>
             <Label className="flex items-center gap-1.5 mb-1.5">
-              <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-              Notas clínicas
+              <FileText className="h-3.5 w-3.5 text-muted-foreground" /> Notas clínicas
             </Label>
-            <Textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Notas libres: observaciones, examen físico, comentarios..."
-              rows={4}
-              className="resize-y"
-            />
+            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notas libres: observaciones, examen físico, comentarios..." rows={4} className="resize-y" />
           </div>
 
           {/* ── DYNAMIC OPTIONAL FIELDS ── */}
@@ -268,28 +271,23 @@ export default function NuevaVisita() {
                         <field.icon className="h-3.5 w-3.5 text-muted-foreground" />
                         {field.label}
                       </Label>
-                      <button
-                        onClick={() => removeField(field.key)}
-                        className="h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                        title="Quitar campo"
-                      >
+                      <button onClick={() => removeField(field.key)} className="h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" title="Quitar campo">
                         <X className="h-3.5 w-3.5" />
                       </button>
                     </div>
-                    {"multiline" in field && field.multiline ? (
-                      <Textarea
-                        value={fieldValues[field.key] ?? ""}
-                        onChange={(e) => setFieldValue(field.key, e.target.value)}
-                        placeholder={field.placeholder}
-                        rows={3}
-                        className="resize-y"
-                      />
+                    {field.type === "textarea" ? (
+                      <Textarea value={fieldValues[field.key] ?? ""} onChange={(e) => setFieldValue(field.key, e.target.value)} placeholder={field.placeholder} rows={3} className="resize-y" />
+                    ) : field.type === "select" && field.options ? (
+                      <Select value={fieldValues[field.key] ?? ""} onValueChange={(v) => setFieldValue(field.key, v)}>
+                        <SelectTrigger className="h-11"><SelectValue placeholder="Seleccionar..." /></SelectTrigger>
+                        <SelectContent>
+                          {field.options.map((opt) => (
+                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     ) : (
-                      <Input
-                        value={fieldValues[field.key] ?? ""}
-                        onChange={(e) => setFieldValue(field.key, e.target.value)}
-                        placeholder={field.placeholder}
-                      />
+                      <Input value={fieldValues[field.key] ?? ""} onChange={(e) => setFieldValue(field.key, e.target.value)} placeholder={field.placeholder} className="h-11" />
                     )}
                   </div>
                 ))}
@@ -301,27 +299,39 @@ export default function NuevaVisita() {
           {availableFields.length > 0 && (
             <Popover open={addFieldOpen} onOpenChange={setAddFieldOpen}>
               <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full border-dashed gap-2 text-muted-foreground hover:text-foreground"
-                >
-                  <Plus className="h-4 w-4" />
-                  Agregar campo
+                <Button variant="outline" size="sm" className="w-full border-dashed gap-2 text-muted-foreground hover:text-foreground">
+                  <Plus className="h-4 w-4" /> Agregar campo
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-64 p-2" align="center">
-                <div className="space-y-0.5">
-                  {availableFields.map((field) => (
-                    <button
-                      key={field.key}
-                      onClick={() => addField(field.key)}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm hover:bg-accent transition-colors text-left"
-                    >
-                      <field.icon className="h-4 w-4 text-muted-foreground shrink-0" />
-                      <span>{field.label}</span>
-                    </button>
-                  ))}
+              <PopoverContent className="w-72 p-3" align="center">
+                <div className="space-y-3">
+                  {FIELD_GROUPS.map((group) => {
+                    const groupAvailable = group.keys.filter((k) => !activeFields.has(k));
+                    if (groupAvailable.length === 0) return null;
+                    return (
+                      <div key={group.title}>
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{group.title}</p>
+                          {groupAvailable.length > 1 && (
+                            <button onClick={() => addAllInGroup(groupAvailable)} className="text-xs text-primary hover:underline">
+                              Agregar todos
+                            </button>
+                          )}
+                        </div>
+                        <div className="space-y-0.5">
+                          {groupAvailable.map((key) => {
+                            const field = OPTIONAL_FIELDS.find((f) => f.key === key)!;
+                            return (
+                              <button key={key} onClick={() => addField(key)} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm hover:bg-accent transition-colors text-left">
+                                <field.icon className="h-4 w-4 text-muted-foreground shrink-0" />
+                                <span>{field.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </PopoverContent>
             </Popover>
@@ -331,22 +341,9 @@ export default function NuevaVisita() {
 
           {/* Submit */}
           <div className="flex gap-3 justify-end">
-            <Button
-              variant="outline"
-              onClick={() => setLocation(`/pacientes/${petId}`)}
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={createVisitMut.isPending || !reason.trim()}
-              className="gap-2"
-            >
-              {createVisitMut.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4" />
-              )}
+            <Button variant="outline" onClick={() => setLocation(`/pacientes/${petId}`)}>Cancelar</Button>
+            <Button onClick={handleSubmit} disabled={createVisitMut.isPending || !reason.trim()} className="gap-2">
+              {createVisitMut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               Guardar visita
             </Button>
           </div>

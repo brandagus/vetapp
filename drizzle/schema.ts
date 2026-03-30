@@ -26,7 +26,7 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// ─── Owners (propietarios) ────────────────────────────────────────────────────
+// ─── Owners (familiares) ─────────────────────────────────────────────────────
 export const owners = mysqlTable("owners", {
   id: int("id").autoincrement().primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
@@ -41,28 +41,73 @@ export const owners = mysqlTable("owners", {
 export type Owner = typeof owners.$inferSelect;
 export type InsertOwner = typeof owners.$inferInsert;
 
-// ─── Pets (mascotas) ──────────────────────────────────────────────────────────
+// ─── Pets (pacientes) ────────────────────────────────────────────────────────
 export const pets = mysqlTable("pets", {
   id: int("id").autoincrement().primaryKey(),
   ownerId: int("ownerId").notNull().references(() => owners.id),
   name: varchar("name", { length: 255 }).notNull(),
-  species: varchar("species", { length: 100 }).notNull(), // perro, gato, etc.
+  species: varchar("species", { length: 100 }).notNull(),
   breed: varchar("breed", { length: 100 }),
   birthDate: date("birthDate"),
   sex: mysqlEnum("sex", ["macho", "hembra", "desconocido"]).default("desconocido"),
   color: varchar("color", { length: 100 }),
-  weight: decimal("weight", { precision: 5, scale: 2 }), // kg
+  weight: decimal("weight", { precision: 5, scale: 2 }),
   microchip: varchar("microchip", { length: 100 }),
   photoUrl: text("photoUrl"),
   photoKey: text("photoKey"),
   notes: text("notes"),
   isActive: boolean("isActive").default(true).notNull(),
+
+  // ── New: Patient type ──
+  patientType: mysqlEnum("patientType", ["seguimiento", "visita_unica"]).default("visita_unica"),
+
+  // ── New: Environment & Lifestyle ──
+  environment: mysqlEnum("environment", ["interior", "exterior", "mixto"]),
+  livesWithOtherAnimals: boolean("livesWithOtherAnimals"),
+  otherAnimalsDetails: text("otherAnimalsDetails"),
+
+  // ── New: Diet ──
+  dietType: mysqlEnum("dietType", ["balanceado", "casera", "mixta", "barf", "otra"]),
+  dietBrand: varchar("dietBrand", { length: 255 }),
+  dietNotes: text("dietNotes"),
+
+  // ── New: Medical Background ──
+  knownAllergies: text("knownAllergies"),
+  previousDiseases: text("previousDiseases"),
+  previousSurgeries: text("previousSurgeries"),
+  currentMedication: text("currentMedication"),
+  isNeutered: mysqlEnum("isNeutered", ["si", "no", "no_se"]),
+  behavior: mysqlEnum("behavior", ["tranquilo", "nervioso", "agresivo", "miedoso", "otro"]),
+
+  // ── New: Deworming ──
+  lastDewormingDate: date("lastDewormingDate"),
+  dewormingProduct: varchar("dewormingProduct", { length: 255 }),
+
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
 export type Pet = typeof pets.$inferSelect;
 export type InsertPet = typeof pets.$inferInsert;
+
+// ─── Vaccinations (vacunas) ──────────────────────────────────────────────────
+export const vaccinations = mysqlTable("vaccinations", {
+  id: int("id").autoincrement().primaryKey(),
+  petId: int("petId").notNull().references(() => pets.id),
+  vaccineName: varchar("vaccineName", { length: 255 }).notNull(),
+  laboratory: varchar("laboratory", { length: 255 }),
+  lotNumber: varchar("lotNumber", { length: 100 }),
+  doseNumber: varchar("doseNumber", { length: 50 }), // "1ra", "2da", "refuerzo", "anual"
+  applicationDate: date("applicationDate").notNull(),
+  nextDoseDate: date("nextDoseDate"),
+  status: mysqlEnum("status", ["aplicada", "programada", "vencida"]).default("aplicada").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Vaccination = typeof vaccinations.$inferSelect;
+export type InsertVaccination = typeof vaccinations.$inferInsert;
 
 // ─── Visits (visitas / historial clínico) ────────────────────────────────────
 export const visits = mysqlTable("visits", {
@@ -75,11 +120,20 @@ export const visits = mysqlTable("visits", {
   treatment: text("treatment"),
   medications: text("medications"),
   nextSteps: text("nextSteps"),
-  weight: decimal("weight", { precision: 5, scale: 2 }), // peso en la visita
-  temperature: decimal("temperature", { precision: 4, scale: 1 }), // temperatura corporal
-  heartRate: varchar("heartRate", { length: 20 }), // frecuencia cardíaca
-  respRate: varchar("respRate", { length: 20 }), // frecuencia respiratoria
-  bodyCondition: varchar("bodyCondition", { length: 20 }), // condición corporal (1-9)
+
+  // ── Physical Exam ──
+  weight: decimal("weight", { precision: 5, scale: 2 }),
+  temperature: decimal("temperature", { precision: 4, scale: 1 }),
+  heartRate: varchar("heartRate", { length: 20 }),
+  respRate: varchar("respRate", { length: 20 }),
+  bodyCondition: varchar("bodyCondition", { length: 20 }),
+
+  // ── New: Additional Physical Exam ──
+  mucosas: mysqlEnum("mucosas", ["rosadas", "palidas", "ictericas", "cianoticas"]),
+  hydration: mysqlEnum("hydration", ["normal", "leve", "moderada", "severa"]),
+  lymphNodes: mysqlEnum("lymphNodes", ["normal", "aumentados"]),
+  dentalStatus: mysqlEnum("dentalStatus", ["bueno", "regular", "malo"]),
+
   notes: text("notes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -96,7 +150,7 @@ export const visitAttachments = mysqlTable("visit_attachments", {
   fileKey: text("fileKey").notNull(),
   fileUrl: text("fileUrl").notNull(),
   mimeType: varchar("mimeType", { length: 100 }),
-  fileSize: int("fileSize"), // bytes
+  fileSize: int("fileSize"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
@@ -108,7 +162,6 @@ export const appointments = mysqlTable("appointments", {
   id: int("id").autoincrement().primaryKey(),
   petId: int("petId").references(() => pets.id),
   ownerId: int("ownerId").references(() => owners.id),
-  // For public booking requests (client not yet in system)
   clientName: varchar("clientName", { length: 255 }),
   clientPhone: varchar("clientPhone", { length: 50 }),
   clientEmail: varchar("clientEmail", { length: 320 }),
@@ -122,7 +175,7 @@ export const appointments = mysqlTable("appointments", {
     .default("pendiente")
     .notNull(),
   notes: text("notes"),
-  visitId: int("visitId").references(() => visits.id), // linked after completion
+  visitId: int("visitId").references(() => visits.id),
   googleCalendarEventId: varchar("googleCalendarEventId", { length: 255 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

@@ -126,6 +126,22 @@ export const petsRouter = router({
           ownerNotes: owners.notes,
           createdAt: pets.createdAt,
           updatedAt: pets.updatedAt,
+          // New fields
+          patientType: pets.patientType,
+          environment: pets.environment,
+          livesWithOtherAnimals: pets.livesWithOtherAnimals,
+          otherAnimalsDetails: pets.otherAnimalsDetails,
+          dietType: pets.dietType,
+          dietBrand: pets.dietBrand,
+          dietNotes: pets.dietNotes,
+          knownAllergies: pets.knownAllergies,
+          previousDiseases: pets.previousDiseases,
+          previousSurgeries: pets.previousSurgeries,
+          currentMedication: pets.currentMedication,
+          isNeutered: pets.isNeutered,
+          behavior: pets.behavior,
+          lastDewormingDate: pets.lastDewormingDate,
+          dewormingProduct: pets.dewormingProduct,
         })
         .from(pets)
         .leftJoin(owners, eq(pets.ownerId, owners.id))
@@ -238,6 +254,22 @@ export const petsRouter = router({
         photoUrl: z.string().optional(),
         photoKey: z.string().optional(),
         notes: z.string().optional(),
+        // New fields
+        patientType: z.enum(["seguimiento", "visita_unica"]).optional(),
+        environment: z.enum(["interior", "exterior", "mixto"]).optional(),
+        livesWithOtherAnimals: z.boolean().optional(),
+        otherAnimalsDetails: z.string().optional(),
+        dietType: z.enum(["balanceado", "casera", "mixta", "barf", "otra"]).optional(),
+        dietBrand: z.string().optional(),
+        dietNotes: z.string().optional(),
+        knownAllergies: z.string().optional(),
+        previousDiseases: z.string().optional(),
+        previousSurgeries: z.string().optional(),
+        currentMedication: z.string().optional(),
+        isNeutered: z.enum(["si", "no", "no_se"]).optional(),
+        behavior: z.enum(["tranquilo", "nervioso", "agresivo", "miedoso", "otro"]).optional(),
+        lastDewormingDate: z.string().optional(),
+        dewormingProduct: z.string().optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -256,6 +288,21 @@ export const petsRouter = router({
         photoUrl: input.photoUrl ?? null,
         photoKey: input.photoKey ?? null,
         notes: input.notes ?? null,
+        patientType: input.patientType ?? null,
+        environment: input.environment ?? null,
+        livesWithOtherAnimals: input.livesWithOtherAnimals ?? null,
+        otherAnimalsDetails: input.otherAnimalsDetails ?? null,
+        dietType: input.dietType ?? null,
+        dietBrand: input.dietBrand ?? null,
+        dietNotes: input.dietNotes ?? null,
+        knownAllergies: input.knownAllergies ?? null,
+        previousDiseases: input.previousDiseases ?? null,
+        previousSurgeries: input.previousSurgeries ?? null,
+        currentMedication: input.currentMedication ?? null,
+        isNeutered: input.isNeutered ?? null,
+        behavior: input.behavior ?? null,
+        lastDewormingDate: input.lastDewormingDate ? new Date(input.lastDewormingDate) : null,
+        dewormingProduct: input.dewormingProduct ?? null,
       });
       return { id: result.insertId };
     }),
@@ -277,17 +324,33 @@ export const petsRouter = router({
         photoKey: z.string().optional(),
         notes: z.string().optional(),
         isActive: z.boolean().optional(),
+        patientType: z.enum(["seguimiento", "visita_unica"]).optional(),
+        environment: z.enum(["interior", "exterior", "mixto"]).optional(),
+        livesWithOtherAnimals: z.boolean().optional(),
+        otherAnimalsDetails: z.string().optional(),
+        dietType: z.enum(["balanceado", "casera", "mixta", "barf", "otra"]).optional(),
+        dietBrand: z.string().optional(),
+        dietNotes: z.string().optional(),
+        knownAllergies: z.string().optional(),
+        previousDiseases: z.string().optional(),
+        previousSurgeries: z.string().optional(),
+        currentMedication: z.string().optional(),
+        isNeutered: z.enum(["si", "no", "no_se"]).optional(),
+        behavior: z.enum(["tranquilo", "nervioso", "agresivo", "miedoso", "otro"]).optional(),
+        lastDewormingDate: z.string().optional(),
+        dewormingProduct: z.string().optional(),
       })
     )
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new Error("DB no disponible");
-      const { id, birthDate, ...rest } = input;
+      const { id, birthDate, lastDewormingDate, ...rest } = input;
       await db
         .update(pets)
         .set({
           ...rest,
           birthDate: birthDate ? new Date(birthDate) : undefined,
+          lastDewormingDate: lastDewormingDate ? new Date(lastDewormingDate) : undefined,
         })
         .where(eq(pets.id, id));
       return { success: true };

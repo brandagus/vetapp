@@ -108,3 +108,16 @@
 - [x] UI: botón para conectar/desconectar Google Calendar
 - [x] UI: indicador de sincronización + botón actualizar por turno
 - [x] 11 tests pasando, TypeScript sin errores
+
+## Mejora Historia Clínica y Onboarding
+- [x] Investigar templates de historia clínica veterinaria profesional
+- [x] Onboarding paciente: agregar campos opcionales (ambiente, alimentación, alergias, vacunas, etc.)
+- [x] Ningún campo obligatorio excepto nombre del paciente
+- [x] Patrón de campos dinámicos (+) para agregar secciones
+- [x] Mejorar formulario de visita con campos clínicos profesionales
+- [x] Actualizar schema de base de datos si es necesario
+- [x] Módulo de vacunas: tabla vaccinations con nombre, dosis, fecha, próxima dosis
+- [x] Seguimiento de vacunas: alertas cuando se acerca la próxima dosis
+- [x] UI vacunas en perfil del paciente: lista de vacunas, agregar nueva, marcar dosis
+- [x] Tipo de paciente: visita única vs. seguimiento a largo plazo
+- [x] Alertas/indicadores visuales para pacientes de seguimiento

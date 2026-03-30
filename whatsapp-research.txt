@@ -1,0 +1,59 @@
+# WhatsApp Business Cloud API - Research Notes
+
+## Architecture
+- Meta WhatsApp Cloud API (free tier available for testing)
+- POST /<PHONE_NUMBER_ID>/messages to send messages
+- Webhooks to receive incoming messages
+- Bearer token auth with permanent system user token
+
+## Key Endpoints
+- Send: POST https://graph.facebook.com/v25.0/<PHONE_NUMBER_ID>/messages
+- Webhook: configured in Meta App Dashboard, receives incoming messages
+
+## Message Types Available
+- Text messages (most relevant for AI responses)
+- Interactive reply buttons (great for booking confirmation)
+- Interactive list messages (great for showing time slots)
+- Location request messages (useful for home visits)
+- Document/Image messages (for sending lab results)
+
+## Setup Requirements
+1. Meta Developer Account + Business Account
+2. Create App in Meta App Dashboard (type: Business)
+3. Add WhatsApp product to the app
+4. Get Phone Number ID + Access Token
+5. Configure webhook URL + verify token
+6. Register a real phone number (or use test number)
+
+## Webhook Payload (incoming message)
+- entry[0].changes[0].value.messages[0] contains:
+  - from: sender phone number
+  - text.body: message text
+  - timestamp
+  - type: text/image/audio/etc.
+
+## Integration Plan for VetApp
+1. Webhook endpoint: /api/whatsapp/webhook (GET for verification, POST for messages)
+2. On incoming message:
+   a. Look up sender phone in owners table
+   b. Pass message + context to LLM (invokeLLM)
+   c. LLM decides action: respond, book appointment, look up patient, etc.
+   d. Execute action in our system
+   e. Send response back via WhatsApp API
+3. AI System Prompt should:
+   - Be warm, personal, in Spanish
+   - Know it's Dra Branda's assistant
+   - Handle: greetings, appointment requests, urgency detection, general questions
+   - Trigger tool calls: createAppointment, lookupPatient, checkAvailability
+4. Store conversation history in DB for context
+
+## Pricing
+- First 1,000 service conversations/month: FREE
+- User-initiated conversations: varies by country (~$0.03 for Argentina)
+- Business-initiated: more expensive, use templates
+
+## Important Notes
+- 24-hour window: can only send free-form messages within 24h of last user message
+- After 24h: must use pre-approved message templates
+- Webhook must respond with 200 OK within 5 seconds
+- Process messages asynchronously to avoid timeout
