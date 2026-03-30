@@ -223,3 +223,55 @@ export const payments = mysqlTable("payments", {
 
 export type Payment = typeof payments.$inferSelect;
 export type InsertPayment = typeof payments.$inferInsert;
+
+// ─── WhatsApp Conversations ─────────────────────────────────────────────────
+export const whatsappConversations = mysqlTable("whatsapp_conversations", {
+  id: int("id").autoincrement().primaryKey(),
+  waId: varchar("waId", { length: 50 }).notNull(), // WhatsApp phone number
+  contactName: varchar("contactName", { length: 255 }),
+  ownerId: int("ownerId").references(() => owners.id), // linked familiar if matched
+  status: mysqlEnum("status", ["active", "closed", "archived"]).default("active").notNull(),
+  lastMessageAt: timestamp("lastMessageAt"),
+  aiEnabled: boolean("aiEnabled").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type WhatsappConversation = typeof whatsappConversations.$inferSelect;
+export type InsertWhatsappConversation = typeof whatsappConversations.$inferInsert;
+
+// ─── WhatsApp Messages ──────────────────────────────────────────────────────
+export const whatsappMessages = mysqlTable("whatsapp_messages", {
+  id: int("id").autoincrement().primaryKey(),
+  conversationId: int("conversationId").notNull().references(() => whatsappConversations.id),
+  waMessageId: varchar("waMessageId", { length: 255 }), // WhatsApp message ID
+  direction: mysqlEnum("direction", ["incoming", "outgoing"]).notNull(),
+  messageType: varchar("messageType", { length: 50 }).default("text").notNull(), // text, interactive, template
+  body: text("body"),
+  metadata: text("metadata"), // JSON for interactive messages, button payloads, etc.
+  status: mysqlEnum("status", ["sent", "delivered", "read", "failed", "received"]).default("sent").notNull(),
+  aiGenerated: boolean("aiGenerated").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type WhatsappMessage = typeof whatsappMessages.$inferSelect;
+export type InsertWhatsappMessage = typeof whatsappMessages.$inferInsert;
+
+// ─── WhatsApp Settings ──────────────────────────────────────────────────────
+export const whatsappSettings = mysqlTable("whatsapp_settings", {
+  id: int("id").autoincrement().primaryKey(),
+  isActive: boolean("isActive").default(false).notNull(),
+  aiAutoReply: boolean("aiAutoReply").default(true).notNull(),
+  businessName: varchar("businessName", { length: 255 }).default("Dra Branda Veterinaria"),
+  welcomeMessage: text("welcomeMessage"),
+  outsideHoursMessage: text("outsideHoursMessage"),
+  businessHoursStart: varchar("businessHoursStart", { length: 5 }).default("09:00"), // HH:mm
+  businessHoursEnd: varchar("businessHoursEnd", { length: 5 }).default("18:00"),
+  workDays: varchar("workDays", { length: 20 }).default("1,2,3,4,5"), // 0=Sun, 1=Mon...
+  quickReplies: text("quickReplies"), // JSON array of {id, title, body}
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type WhatsappSetting = typeof whatsappSettings.$inferSelect;
+export type InsertWhatsappSetting = typeof whatsappSettings.$inferInsert;

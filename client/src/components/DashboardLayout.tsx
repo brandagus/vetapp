@@ -33,6 +33,7 @@ import {
   LogOut,
   PanelLeft,
   UserCog,
+  MessageCircle,
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -73,6 +74,7 @@ const adminMenuGroup = {
   label: "Administración",
   items: [
     { icon: UserCog, label: "Usuarios", path: "/admin/usuarios" },
+    { icon: MessageCircle, label: "WhatsApp", path: "/admin/whatsapp" },
   ],
 };
 

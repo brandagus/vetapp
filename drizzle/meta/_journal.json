@@ -50,6 +50,13 @@
       "when": 1774893526989,
       "tag": "0006_dear_medusa",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1774895697609,
+      "tag": "0007_white_havok",
+      "breakpoints": true
     }
   ]
 }

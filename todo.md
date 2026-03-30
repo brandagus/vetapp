@@ -153,3 +153,29 @@
 - [x] Owner del proyecto = admin maestro automáticamente
 - [x] Bloqueo de usuarios desactivados (no pueden acceder al sistema)
 - [x] 23 tests pasando (12 nuevos para admin + 11 existentes)
+
+## Integración WhatsApp Business API
+- [x] Schema DB: tabla whatsappConversations (conversaciones con clientes)
+- [x] Schema DB: tabla whatsappMessages (historial de mensajes entrantes/salientes)
+- [x] Schema DB: tabla whatsappSettings (configuración global)
+- [x] Migración de base de datos con pnpm db:push
+- [x] Webhook GET: verificación de webhook de Meta
+- [x] Webhook POST: recepción de mensajes entrantes
+- [x] Servicio: enviar mensajes de texto vía WhatsApp Cloud API
+- [x] Servicio: enviar mensajes interactivos (botones de respuesta rápida)
+- [x] Motor IA: sistema de prompt en español para contexto veterinario
+- [x] Motor IA: respuestas automáticas inteligentes con LLM
+- [x] Motor IA: detección de intención (consulta turno, info paciente, emergencia, saludo)
+- [x] Gestión de turnos: crear turno desde WhatsApp
+- [x] Gestión de turnos: consultar próximo turno desde WhatsApp
+- [x] Gestión de turnos: cancelar/reprogramar turno desde WhatsApp
+- [x] Búsqueda de pacientes: buscar por nombre de mascota o familiar desde WhatsApp
+- [x] Admin UI: página de configuración de WhatsApp (tokens, webhook URL, estado)
+- [x] Admin UI: visor de conversaciones con panel de mensajes
+- [x] Admin UI: toggle para activar/desactivar IA por conversación y global
+- [x] Admin UI: respuestas rápidas personalizables (CRUD)
+- [x] Admin UI: estadísticas (conversaciones, mensajes, respuestas IA)
+- [x] Admin UI: horario de atención configurable (días y horas)
+- [x] Admin UI: envío manual de mensajes desde el panel
+- [x] tRPC router completo: settings, conversations, messages, stats, send, toggleAI, linkOwner
+- [x] 39 tests pasando (16 nuevos para WhatsApp + 23 existentes)

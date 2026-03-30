@@ -18,6 +18,7 @@ import Estadisticas from "./pages/Estadisticas";
 import NuevoPaciente from "./pages/NuevoPaciente";
 import AdminUsuarios from "./pages/AdminUsuarios";
 import LoginEmail from "./pages/LoginEmail";
+import AdminWhatsApp from "./pages/AdminWhatsApp";
 
 function AppRoutes() {
   return (
@@ -36,6 +37,7 @@ function AppRoutes() {
             <Route path="/finanzas" component={Finanzas} />
             <Route path="/estadisticas" component={Estadisticas} />
             <Route path="/admin/usuarios" component={AdminUsuarios} />
+            <Route path="/admin/whatsapp" component={AdminWhatsApp} />
             <Route path="/404" component={NotFound} />
             <Route component={NotFound} />
           </Switch>
