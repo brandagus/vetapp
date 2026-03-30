@@ -131,3 +131,12 @@
 - [x] Guardar URL del audio original en la visita para reproducción posterior
 - [x] UI: botón de micrófono prominente en el formulario de nueva visita
 - [x] UI: indicador de estado (grabando, transcribiendo, procesando)
+
+## Datos de Prueba
+- [x] Crear script de seed con 12 familias argentinas
+- [x] 23 mascotas (perros, gatos, conejos, aves)
+- [x] 16 visitas con historiales clínicos variados
+- [x] 11 turnos en distintos estados
+- [x] 19 vacunas con seguimiento (aplicadas, vencidas, programadas)
+- [x] 17 pagos (pagados, pendientes, parciales)
+- [x] Verificación completa: Dashboard, Pacientes, Perfil, Turnos, Finanzas

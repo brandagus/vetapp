@@ -1,0 +1,9 @@
+Dashboard verification after seed:
+- Turnos hoy: 3 (Milo 10:00 confirmado, Lola 14:00 confirmado, Rex 17:00 pendiente) ✅
+- Cobros pendientes: 6 ✅
+- Familiares: 13 (12 seeded + 1 existing) ✅
+- Pacientes: 24 (23 seeded + 1 existing) ✅
+- Turnos de hoy showing correctly with names, pets, addresses ✅
+- Cobros pendientes showing with amounts and status badges ✅
+- Logo and branding correct ✅
+- All data looks realistic and properly formatted ✅

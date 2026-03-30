@@ -1,0 +1,36 @@
+Full App Verification with Seed Data - March 30, 2026
+
+DASHBOARD:
+- 3 turnos hoy showing correctly (Milo 10:00, Lola 14:00, Rex 17:00)
+- 6 cobros pendientes
+- 13 familiares, 24 pacientes
+- Cobros pendientes list with amounts and status badges
+- Logo and branding correct
+
+PACIENTES:
+- 24 patients listed with correct species emojis, breeds, weights
+- Species filter chips (Todos, Ave, Conejo, Gato, Perro) visible
+- Search bar working
+- Each card shows: name, species badge, breed, sex, weight, owner name, phone
+
+PET PROFILE (Rocky):
+- Header: name, species, sex, patient type (Seguimiento), breed, age, color, weight, castrated, temperament
+- Stats: 3 visitas, última 10 ene 2026, $15000 pagado
+- Familiar section: María Fernández, phone, email, address
+- Collapsible sections: Ambiente, Alimentación, Antecedentes (shows "Alergia al pollo"), Desparasitación
+- Vacunas: Séxtuple canina + Antirrábica with dates and lab info
+- Historial: 3 visits with dates, diagnoses, weights, temperatures
+
+TURNOS:
+- Monthly calendar view showing appointments on correct dates
+- March 25-30 have appointments visible
+- Google Calendar connect button present
+- View switcher (Mes/Semana/Lista) working
+
+FINANZAS:
+- Cobrado: $182,000 / Pendiente: $115,000 / Total: $297,000
+- 17 payments listed with correct amounts, methods, dates, statuses
+- Filter chips (Todos/Pagado/Pendiente/Parcial) visible
+- Edit and delete buttons on each payment
+
+ALL MODULES VERIFIED WORKING CORRECTLY.
