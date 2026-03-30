@@ -24,6 +24,12 @@ import {
   Pill,
   ChevronRight,
   ExternalLink,
+  Mic,
+  Play,
+  Pause,
+  Volume2,
+  ChevronDown,
+  Sparkles,
 } from "lucide-react";
 import { useLocation, useParams } from "wouter";
 import { useForm } from "react-hook-form";
@@ -55,6 +61,67 @@ const visitSchema = z.object({
   notes: z.string().optional(),
 });
 type VisitForm = z.infer<typeof visitSchema>;
+
+function AudioPlayer({ url }: { url: string }) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  const togglePlay = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (isPlaying) {
+      audio.pause();
+    } else {
+      audio.play();
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  const formatTime = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, "0")}`;
+  };
+
+  return (
+    <div className="flex items-center gap-3 p-3 rounded-lg bg-white border">
+      <audio
+        ref={audioRef}
+        src={url}
+        onTimeUpdate={() => {
+          const a = audioRef.current;
+          if (a && a.duration) setProgress((a.currentTime / a.duration) * 100);
+        }}
+        onLoadedMetadata={() => {
+          if (audioRef.current) setDuration(audioRef.current.duration);
+        }}
+        onEnded={() => { setIsPlaying(false); setProgress(0); }}
+      />
+      <button
+        onClick={togglePlay}
+        className="h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 hover:bg-primary/90 transition-colors"
+      >
+        {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
+      </button>
+      <div className="flex-1 min-w-0">
+        <div className="h-2 rounded-full bg-muted overflow-hidden">
+          <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
+        </div>
+        <div className="flex justify-between mt-1">
+          <span className="text-xs text-muted-foreground">
+            {audioRef.current ? formatTime(audioRef.current.currentTime) : "0:00"}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {duration > 0 ? formatTime(duration) : "--:--"}
+          </span>
+        </div>
+      </div>
+      <Volume2 className="h-4 w-4 text-muted-foreground shrink-0" />
+    </div>
+  );
+}
 
 function AttachmentIcon({ mimeType }: { mimeType: string | null | undefined }) {
   if (mimeType?.startsWith("image/")) return <Image className="h-5 w-5 text-blue-500" />;
@@ -368,6 +435,36 @@ export default function VisitaDetalle() {
           )}
         </CardContent>
       </Card>
+
+      {/* Audio recording (if exists) */}
+      {(visit.audioUrl || visit.audioTranscription) && (
+        <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Mic className="h-5 w-5 text-primary" />
+              Audio de la consulta
+              <span className="inline-flex items-center gap-1 text-xs font-normal text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                <Sparkles className="h-3 w-3" /> Dictado por IA
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {visit.audioUrl && <AudioPlayer url={visit.audioUrl} />}
+            {visit.audioTranscription && (
+              <details className="group">
+                <summary className="flex items-center gap-2 cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors py-1">
+                  <FileText className="h-4 w-4" />
+                  Ver transcripción original
+                  <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
+                </summary>
+                <div className="mt-2 p-3 rounded-lg bg-white border text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                  {visit.audioTranscription}
+                </div>
+              </details>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Attachments */}
       <Card>

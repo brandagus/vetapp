@@ -83,6 +83,8 @@ export const visitsRouter = router({
         lymphNodes: z.enum(["normal", "aumentados"]).optional(),
         dentalStatus: z.enum(["bueno", "regular", "malo"]).optional(),
         notes: z.string().optional(),
+        audioUrl: z.string().optional(),
+        audioTranscription: z.string().optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -107,6 +109,8 @@ export const visitsRouter = router({
         lymphNodes: input.lymphNodes ?? null,
         dentalStatus: input.dentalStatus ?? null,
         notes: input.notes ?? null,
+        audioUrl: input.audioUrl ?? null,
+        audioTranscription: input.audioTranscription ?? null,
       });
       return { id: result.insertId };
     }),
@@ -131,6 +135,8 @@ export const visitsRouter = router({
         lymphNodes: z.enum(["normal", "aumentados"]).optional(),
         dentalStatus: z.enum(["bueno", "regular", "malo"]).optional(),
         notes: z.string().optional(),
+        audioUrl: z.string().optional(),
+        audioTranscription: z.string().optional(),
       })
     )
     .mutation(async ({ input }) => {

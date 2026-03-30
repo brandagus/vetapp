@@ -135,6 +135,9 @@ export const visits = mysqlTable("visits", {
   dentalStatus: mysqlEnum("dentalStatus", ["bueno", "regular", "malo"]),
 
   notes: text("notes"),
+  // ── Audio Recording ──
+  audioUrl: text("audioUrl"),
+  audioTranscription: text("audioTranscription"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

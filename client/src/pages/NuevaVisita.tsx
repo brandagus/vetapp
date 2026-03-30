@@ -14,12 +14,17 @@ import {
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Collapsible, CollapsibleContent, CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { toast } from "sonner";
 import {
   ArrowLeft, Plus, X, Calendar, Stethoscope, Weight, Thermometer,
   Heart, Activity, FileText, Save, Loader2, Eye, Droplets, CircleDot, Smile,
+  Mic, ChevronDown, Sparkles,
 } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
+import AudioRecorder from "@/components/AudioRecorder";
 
 // ── All optional fields with types ──
 type FieldDef = {
@@ -60,12 +65,30 @@ const OPTIONAL_FIELDS: FieldDef[] = [
   { key: "nextSteps", label: "Próximos pasos", icon: Calendar, placeholder: "Seguimiento, controles...", type: "textarea" },
 ];
 
-// Group fields for the popover
 const FIELD_GROUPS = [
   { title: "Signos vitales", keys: ["weight", "temperature", "heartRate", "respRate", "bodyCondition"] },
   { title: "Examen físico", keys: ["mucosas", "hydration", "lymphNodes", "dentalStatus"] },
   { title: "Clínico", keys: ["diagnosis", "treatment", "medications", "nextSteps"] },
 ];
+
+// Map from LLM extraction keys to form field keys
+const EXTRACTION_MAP: Record<string, string> = {
+  reason: "_reason",
+  diagnosis: "diagnosis",
+  treatment: "treatment",
+  medications: "medications",
+  nextSteps: "nextSteps",
+  weight: "weight",
+  temperature: "temperature",
+  heartRate: "heartRate",
+  respRate: "respRate",
+  bodyCondition: "bodyCondition",
+  mucpiosas: "mucosas", // LLM uses mucpiosas
+  hydration: "hydration",
+  lymphNodes: "lymphNodes",
+  dentalStatus: "dentalStatus",
+  notes: "_notes",
+};
 
 function speciesEmoji(species: string): string {
   const s = species.toLowerCase();
@@ -90,6 +113,7 @@ export default function NuevaVisita() {
 
   const { data: pet, isLoading: petLoading } = trpc.pets.getProfile.useQuery({ id: petId });
   const createVisitMut = trpc.visits.create.useMutation();
+  const processAudioMut = trpc.voice.processAudio.useMutation();
   const utils = trpc.useUtils();
 
   // Form state
@@ -99,6 +123,13 @@ export default function NuevaVisita() {
   const [activeFields, setActiveFields] = useState<Set<string>>(new Set());
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [addFieldOpen, setAddFieldOpen] = useState(false);
+
+  // Audio state
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [audioTranscription, setAudioTranscription] = useState<string | null>(null);
+  const [isProcessingAudio, setIsProcessingAudio] = useState(false);
+  const [showTranscription, setShowTranscription] = useState(false);
+  const [fieldsAutoPopulated, setFieldsAutoPopulated] = useState(false);
 
   const availableFields = useMemo(
     () => OPTIONAL_FIELDS.filter((f) => !activeFields.has(f.key)),
@@ -136,6 +167,64 @@ export default function NuevaVisita() {
     setFieldValues((prev) => ({ ...prev, [key]: value }));
   };
 
+  // Handle audio recording completion
+  const handleRecordingComplete = useCallback(async (audioBase64: string, mimeType: string) => {
+    if (!pet) return;
+    setIsProcessingAudio(true);
+
+    try {
+      const result = await processAudioMut.mutateAsync({
+        audioBase64,
+        mimeType,
+        petName: pet.name,
+        ownerName: pet.ownerName ?? undefined,
+      });
+
+      setAudioUrl(result.audioUrl);
+      setAudioTranscription(result.transcription);
+
+      // Auto-populate fields from extraction
+      const extracted = result.extractedFields as Record<string, unknown>;
+      if (extracted) {
+        const newActiveFields = new Set(activeFields);
+        const newFieldValues = { ...fieldValues };
+
+        for (const [extractKey, value] of Object.entries(extracted)) {
+          if (value === null || value === undefined || value === "") continue;
+
+          const formKey = EXTRACTION_MAP[extractKey];
+          if (!formKey) continue;
+
+          const strValue = typeof value === "number" ? String(value) : String(value);
+
+          if (formKey === "_reason") {
+            if (!reason.trim()) setReason(strValue);
+          } else if (formKey === "_notes") {
+            if (!notes.trim()) setNotes(strValue);
+          } else {
+            // Activate the field and set its value
+            newActiveFields.add(formKey);
+            newFieldValues[formKey] = strValue;
+          }
+        }
+
+        setActiveFields(newActiveFields);
+        setFieldValues(newFieldValues);
+        setFieldsAutoPopulated(true);
+      }
+
+      toast.success("Audio procesado. Los campos se completaron automáticamente.", {
+        description: "Revisá los datos y ajustá lo que sea necesario.",
+        duration: 5000,
+      });
+    } catch (err) {
+      console.error("Error processing audio:", err);
+      toast.error("Error al procesar el audio. Intentá de nuevo.");
+    } finally {
+      setIsProcessingAudio(false);
+    }
+  }, [pet, activeFields, fieldValues, reason, notes, processAudioMut]);
+
   const handleSubmit = async () => {
     if (!reason.trim()) {
       toast.error("El motivo de consulta es obligatorio");
@@ -163,6 +252,8 @@ export default function NuevaVisita() {
         hydration: (fieldValues.hydration as "normal" | "leve" | "moderada" | "severa") || undefined,
         lymphNodes: (fieldValues.lymphNodes as "normal" | "aumentados") || undefined,
         dentalStatus: (fieldValues.dentalStatus as "bueno" | "regular" | "malo") || undefined,
+        audioUrl: audioUrl ?? undefined,
+        audioTranscription: audioTranscription ?? undefined,
       });
       toast.success("Visita registrada");
       utils.visits.listByPet.invalidate({ petId });
@@ -222,12 +313,65 @@ export default function NuevaVisita() {
         </CardContent>
       </Card>
 
+      {/* ── AUDIO RECORDER ── */}
+      <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Mic className="h-5 w-5 text-primary" />
+            Dictado por voz
+            <Badge variant="secondary" className="text-xs font-normal gap-1">
+              <Sparkles className="h-3 w-3" /> IA
+            </Badge>
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Grabá la consulta hablando y la IA completará los campos automáticamente
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <AudioRecorder
+            onRecordingComplete={handleRecordingComplete}
+            isProcessing={isProcessingAudio}
+            existingAudioUrl={audioUrl}
+            disabled={createVisitMut.isPending}
+          />
+
+          {/* Transcription collapsible */}
+          {audioTranscription && (
+            <Collapsible open={showTranscription} onOpenChange={setShowTranscription}>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="sm" className="w-full justify-between text-muted-foreground hover:text-foreground">
+                  <span className="flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Ver transcripción original
+                  </span>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${showTranscription ? "rotate-180" : ""}`} />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="mt-2 p-3 rounded-lg bg-white border text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                  {audioTranscription}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
+
+          {fieldsAutoPopulated && (
+            <div className="flex items-center gap-2 p-2 rounded-lg bg-emerald-50 border border-emerald-200">
+              <Sparkles className="h-4 w-4 text-emerald-600 shrink-0" />
+              <p className="text-xs text-emerald-700">
+                Campos completados por IA. Revisá y ajustá lo que sea necesario antes de guardar.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* ── VISIT FORM ── */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Stethoscope className="h-5 w-5 text-primary" />
-            Nueva visita clínica
+            Datos de la visita
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
@@ -247,6 +391,9 @@ export default function NuevaVisita() {
           <div>
             <Label className="flex items-center gap-1.5 mb-1.5">
               <FileText className="h-3.5 w-3.5 text-muted-foreground" /> Motivo de consulta *
+              {fieldsAutoPopulated && reason && (
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-emerald-600 border-emerald-300">IA</Badge>
+              )}
             </Label>
             <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="¿Por qué vino el paciente?" rows={2} className="resize-none" />
           </div>
@@ -255,6 +402,9 @@ export default function NuevaVisita() {
           <div>
             <Label className="flex items-center gap-1.5 mb-1.5">
               <FileText className="h-3.5 w-3.5 text-muted-foreground" /> Notas clínicas
+              {fieldsAutoPopulated && notes && (
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-emerald-600 border-emerald-300">IA</Badge>
+              )}
             </Label>
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notas libres: observaciones, examen físico, comentarios..." rows={4} className="resize-y" />
           </div>
@@ -270,6 +420,9 @@ export default function NuevaVisita() {
                       <Label className="flex items-center gap-1.5">
                         <field.icon className="h-3.5 w-3.5 text-muted-foreground" />
                         {field.label}
+                        {fieldsAutoPopulated && fieldValues[field.key] && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-emerald-600 border-emerald-300">IA</Badge>
+                        )}
                       </Label>
                       <button onClick={() => removeField(field.key)} className="h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" title="Quitar campo">
                         <X className="h-3.5 w-3.5" />
@@ -342,7 +495,7 @@ export default function NuevaVisita() {
           {/* Submit */}
           <div className="flex gap-3 justify-end">
             <Button variant="outline" onClick={() => setLocation(`/pacientes/${petId}`)}>Cancelar</Button>
-            <Button onClick={handleSubmit} disabled={createVisitMut.isPending || !reason.trim()} className="gap-2">
+            <Button onClick={handleSubmit} disabled={createVisitMut.isPending || isProcessingAudio || !reason.trim()} className="gap-2">
               {createVisitMut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               Guardar visita
             </Button>

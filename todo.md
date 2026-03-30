@@ -121,3 +121,13 @@
 - [x] UI vacunas en perfil del paciente: lista de vacunas, agregar nueva, marcar dosis
 - [x] Tipo de paciente: visita única vs. seguimiento a largo plazo
 - [x] Alertas/indicadores visuales para pacientes de seguimiento
+
+## Grabación de Audio para Visitas
+- [x] Endpoint server: subir audio a S3 y transcribir con Whisper
+- [x] Endpoint server: LLM analiza transcripción y extrae campos clínicos (JSON estructurado)
+- [x] Componente frontend: grabador de audio con botón rec/stop y visualización
+- [x] Componente frontend: reproductor de audio original
+- [x] Integración: al terminar grabación, transcribir → LLM → auto-llenar campos del formulario
+- [x] Guardar URL del audio original en la visita para reproducción posterior
+- [x] UI: botón de micrófono prominente en el formulario de nueva visita
+- [x] UI: indicador de estado (grabando, transcribiendo, procesando)

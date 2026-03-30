@@ -36,6 +36,13 @@
       "when": 1774886272767,
       "tag": "0004_thick_meltdown",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1774888409874,
+      "tag": "0005_premium_the_hand",
+      "breakpoints": true
     }
   ]
 }
