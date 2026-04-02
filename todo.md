@@ -236,3 +236,6 @@
 - [x] Fix: seleccionar mascota primero auto-completa info del dueño (nombre, teléfono, dirección)
 - [x] Fix: seleccionar familiar ahora auto-completa dirección del domicilio
 - [x] Fix: limpiar familiar también limpia dirección
+
+## Limpieza de datos de prueba para lanzamiento (April 2, 2026)
+- [x] Eliminar todos los datos de prueba de la base de datos (familiares, mascotas, visitas, vacunas, turnos, pagos, mensajes WhatsApp)
