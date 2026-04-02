@@ -205,3 +205,7 @@
 - [x] PDF se sube a S3 y se abre en nueva pestaña
 - [x] Tests para el módulo de PDF (5 tests: router, función, formateo de fechas, cálculo de edad, label map)
 - [x] 44 tests pasando en total
+
+## Bug Fix: PDF no se descarga (April 2, 2026)
+- [x] Fix: PDF dice "generado" pero no se descarga (window.open bloqueado por popup blocker)
+- [x] Cambiar a descarga directa con fetch+blob+anchor download en vez de window.open

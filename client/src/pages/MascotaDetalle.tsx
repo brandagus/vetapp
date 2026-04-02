@@ -145,9 +145,25 @@ export default function MascotaDetalle() {
 
   const [isExporting, setIsExporting] = useState(false);
   const exportPDFMut = trpc.pdfExport.generatePatientHistory.useMutation({
-    onSuccess: (data) => {
-      window.open(data.url, "_blank");
-      toast.success("PDF generado correctamente");
+    onSuccess: async (data) => {
+      try {
+        // Fetch the PDF as blob and trigger download to avoid popup blockers
+        const response = await fetch(data.url);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = `historial-${pet?.name || "paciente"}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+        toast.success("PDF descargado correctamente");
+      } catch {
+        // Fallback: open in new tab if fetch fails
+        window.open(data.url, "_blank");
+        toast.success("PDF generado — se abrió en nueva pestaña");
+      }
       setIsExporting(false);
     },
     onError: () => {
