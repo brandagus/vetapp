@@ -1,8 +1,9 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { owners } from "../../drizzle/schema";
-import { eq, like, or, desc } from "drizzle-orm";
+import { owners, pets } from "../../drizzle/schema";
+import { eq, like, or, desc, sql } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
 
 export const ownersRouter = router({
   list: protectedProcedure
@@ -80,6 +81,20 @@ export const ownersRouter = router({
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new Error("DB no disponible");
+
+      // Check for linked pets
+      const [petCount] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(pets)
+        .where(eq(pets.ownerId, input.id));
+
+      if (Number(petCount?.count) > 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No se puede eliminar este familiar porque tiene mascotas asociadas. Eliminá las mascotas primero.",
+        });
+      }
+
       await db.delete(owners).where(eq(owners.id, input.id));
       return { success: true };
     }),

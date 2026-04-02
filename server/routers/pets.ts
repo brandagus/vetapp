@@ -1,8 +1,9 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { pets, owners, visits, payments } from "../../drizzle/schema";
+import { pets, owners, visits, payments, vaccinations } from "../../drizzle/schema";
 import { eq, desc, or, like, sql } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
 
 export const petsRouter = router({
   list: protectedProcedure
@@ -361,6 +362,33 @@ export const petsRouter = router({
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new Error("DB no disponible");
+
+      // Check for linked visits
+      const [visitCount] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(visits)
+        .where(eq(visits.petId, input.id));
+
+      if (Number(visitCount?.count) > 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No se puede eliminar este paciente porque tiene visitas asociadas. Eliminá las visitas primero.",
+        });
+      }
+
+      // Check for linked vaccinations
+      const [vaccCount] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(vaccinations)
+        .where(eq(vaccinations.petId, input.id));
+
+      if (Number(vaccCount?.count) > 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No se puede eliminar este paciente porque tiene vacunas asociadas. Eliminá las vacunas primero.",
+        });
+      }
+
       await db.delete(pets).where(eq(pets.id, input.id));
       return { success: true };
     }),

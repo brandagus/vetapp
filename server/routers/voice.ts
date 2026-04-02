@@ -72,7 +72,7 @@ Los campos posibles son:
 - heartRate: frecuencia cardíaca (string, ej: "120 lpm")
 - respRate: frecuencia respiratoria (string, ej: "20 rpm")
 - bodyCondition: condición corporal (string, ej: "3/5" o "normal")
-- mucpiosas: estado de mucosas, solo uno de: "rosadas", "palidas", "ictericas", "cianoticas" (string o null)
+- mucosas: estado de mucosas, solo uno de: "rosadas", "palidas", "ictericas", "cianoticas" (string o null)
 - hydration: estado de hidratación, solo uno de: "normal", "leve", "moderada", "severa" (string o null)
 - lymphNodes: ganglios linfáticos, solo uno de: "normal", "aumentados" (string o null)
 - dentalStatus: estado dental, solo uno de: "bueno", "regular", "malo" (string o null)
@@ -107,13 +107,13 @@ Transcripción de la consulta:
                 heartRate: { type: ["string", "null"], description: "Frecuencia cardíaca" },
                 respRate: { type: ["string", "null"], description: "Frecuencia respiratoria" },
                 bodyCondition: { type: ["string", "null"], description: "Condición corporal" },
-                mucpiosas: { type: ["string", "null"], description: "Estado de mucosas" },
+                mucosas: { type: ["string", "null"], description: "Estado de mucosas" },
                 hydration: { type: ["string", "null"], description: "Hidratación" },
                 lymphNodes: { type: ["string", "null"], description: "Ganglios linfáticos" },
                 dentalStatus: { type: ["string", "null"], description: "Estado dental" },
                 notes: { type: ["string", "null"], description: "Otras observaciones" },
               },
-              required: ["reason", "diagnosis", "treatment", "medications", "nextSteps", "weight", "temperature", "heartRate", "respRate", "bodyCondition", "mucpiosas", "hydration", "lymphNodes", "dentalStatus", "notes"],
+              required: ["reason", "diagnosis", "treatment", "medications", "nextSteps", "weight", "temperature", "heartRate", "respRate", "bodyCondition", "mucosas", "hydration", "lymphNodes", "dentalStatus", "notes"],
               additionalProperties: false,
             },
           },

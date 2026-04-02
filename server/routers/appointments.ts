@@ -3,6 +3,40 @@ import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { appointments, pets, owners } from "../../drizzle/schema";
 import { eq, and, gte, lte, desc } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
+
+// ─── In-memory IP rate limiter for public booking ───────────────────────────
+const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+// Cleanup expired entries every 10 minutes
+setInterval(() => {
+  const now = Date.now();
+  rateLimitMap.forEach((entry, ip) => {
+    if (now > entry.resetAt) {
+      rateLimitMap.delete(ip);
+    }
+  });
+}, 10 * 60 * 1000);
+
+function checkRateLimit(ip: string): void {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return;
+  }
+
+  entry.count++;
+  if (entry.count > RATE_LIMIT_MAX) {
+    throw new TRPCError({
+      code: "TOO_MANY_REQUESTS",
+      message: "Demasiadas solicitudes. Pod\u00e9s enviar un m\u00e1ximo de 5 solicitudes de turno por hora. Intent\u00e1 de nuevo m\u00e1s tarde.",
+    });
+  }
+}
 
 export const appointmentsRouter = router({
   list: protectedProcedure
@@ -220,7 +254,11 @@ export const appointmentsRouter = router({
         address: z.string().optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      // Rate limit by IP
+      const ip = ctx.req.ip || ctx.req.headers["x-forwarded-for"]?.toString() || "unknown";
+      checkRateLimit(ip);
+
       const db = await getDb();
       if (!db) throw new Error("DB no disponible");
       const startTime = new Date(input.preferredDate);

@@ -179,3 +179,9 @@
 - [x] Admin UI: envío manual de mensajes desde el panel
 - [x] tRPC router completo: settings, conversations, messages, stats, send, toggleAI, linkOwner
 - [x] 39 tests pasando (16 nuevos para WhatsApp + 23 existentes)
+
+## Bug Fixes (April 2, 2026)
+- [x] Bug 1: Fix typo mucpiosas → mucosas in server/routers/voice.ts (lines ~75 and ~116)
+- [x] Bug 2: Translate NotFound page from English to Argentine Spanish
+- [x] Bug 3: Prevent deletion of owners with linked pets and pets with linked visits/vaccinations
+- [x] Bug 4: Add IP-based rate limiting (5 req/IP/hour) to appointments.requestBooking
