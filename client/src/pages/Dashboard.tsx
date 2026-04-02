@@ -24,13 +24,16 @@ function StatCard({
   icon: Icon,
   description,
   color = "primary",
+  href,
 }: {
   title: string;
   value: string | number;
   icon: React.ElementType;
   description?: string;
   color?: "primary" | "amber" | "green" | "blue";
+  href?: string;
 }) {
+  const [, setLocation] = useLocation();
   const colorMap = {
     primary: "bg-primary/10 text-primary",
     amber: "bg-amber-100 text-amber-700",
@@ -38,7 +41,10 @@ function StatCard({
     blue: "bg-blue-100 text-blue-700",
   };
   return (
-    <Card>
+    <Card
+      className={href ? "cursor-pointer hover:shadow-md hover:border-primary/30 transition-all active:scale-[0.98]" : ""}
+      onClick={href ? () => setLocation(href) : undefined}
+    >
       <CardContent className="p-5">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
@@ -101,24 +107,28 @@ export default function Dashboard() {
           value={todayAppts.length}
           icon={Calendar}
           color="primary"
+          href="/turnos"
         />
         <StatCard
           title="Cobros pendientes"
           value={stats?.pendingCount ?? 0}
           icon={AlertCircle}
           color="amber"
+          href="/finanzas"
         />
         <StatCard
           title="Familiares"
           value={stats?.totalOwners ?? 0}
           icon={Users}
           color="blue"
+          href="/pacientes"
         />
         <StatCard
           title="Pacientes"
           value={stats?.totalPets ?? 0}
           icon={PawPrint}
           color="green"
+          href="/pacientes"
         />
       </div>
 

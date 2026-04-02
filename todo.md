@@ -209,3 +209,6 @@
 ## Bug Fix: PDF no se descarga (April 2, 2026)
 - [x] Fix: PDF dice "generado" pero no se descarga (window.open bloqueado por popup blocker)
 - [x] Cambiar a descarga directa con fetch+blob+anchor download en vez de window.open
+
+## UX: Dashboard cards clickeables (April 2, 2026)
+- [x] Hacer las 4 tarjetas del dashboard (Turnos hoy, Cobros pendientes, Familiares, Pacientes) clickeables con navegación a sus páginas
