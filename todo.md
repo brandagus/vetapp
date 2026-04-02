@@ -221,3 +221,8 @@
 - [x] Opción "Crear nuevo paciente" después de guardar el turno (dialog post-creación)
 - [x] Campos: Familiar, Mascota, Fecha/hora inicio, Fecha/hora fin, Dirección, Motivo, Notas, Estado
 - [x] Campo "nombre del cliente" solo visible si no se selecciona familiar existente
+
+## Bug Fix: Turno post-create dialog (April 2, 2026)
+- [x] Fix: "Crear nuevo paciente" dialog aparece siempre, incluso con mascota existente seleccionada
+- [x] Solo mostrar opción de crear paciente cuando NO se seleccionó mascota existente
+- [x] Permitir crear turnos con mascotas existentes sin interrupciones

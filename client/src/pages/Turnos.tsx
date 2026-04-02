@@ -162,9 +162,14 @@ export default function Turnos() {
       utils.dashboard.getSummary.invalidate();
       setShowCreate(false);
       reset();
+      const hadExistingPet = !!selectedPetId;
       setSelectedOwnerId(undefined);
+      setSelectedPetId(undefined);
       toast.success("Turno creado");
-      setShowPostCreate(true);
+      // Only offer to create new patient if no existing pet was selected
+      if (!hadExistingPet) {
+        setShowPostCreate(true);
+      }
       // Auto-sync to Google Calendar if connected
       if (gcalStatus?.connected && data.id) {
         syncAppt.mutate({
@@ -201,6 +206,7 @@ export default function Turnos() {
   });
 
   const [selectedOwnerId, setSelectedOwnerId] = useState<number | undefined>();
+  const [selectedPetId, setSelectedPetId] = useState<number | undefined>();
   const [showPostCreate, setShowPostCreate] = useState(false);
   const [lastCreatedOwnerId, setLastCreatedOwnerId] = useState<number | undefined>();
 
@@ -227,6 +233,9 @@ export default function Turnos() {
       endTime: endTime.toISOString(),
     });
   };
+
+  // Track if an existing pet was selected for the post-create logic
+  const lastSelectedPetId = selectedPetId;
 
   const handleDayClick = (day: Date) => {
     setSelectedDay(day);
@@ -704,7 +713,7 @@ export default function Turnos() {
       {/* Create dialog */}
       <Dialog open={showCreate} onOpenChange={(open) => {
         setShowCreate(open);
-        if (!open) { setSelectedOwnerId(undefined); reset(); }
+        if (!open) { setSelectedOwnerId(undefined); setSelectedPetId(undefined); reset(); }
       }}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -761,6 +770,7 @@ export default function Turnos() {
                     onValueChange={v => {
                       const id = parseInt(v);
                       field.onChange(id);
+                      setSelectedPetId(id);
                       // Auto-fill pet info
                       const allPets = selectedOwnerId ? filteredPets : pets;
                       const pet = allPets?.find(p => p.id === id);
