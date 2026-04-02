@@ -59,7 +59,10 @@ export const voiceRouter = router({
             role: "system",
             content: `Sos un asistente veterinario que extrae información clínica de transcripciones de consultas veterinarias a domicilio en Argentina.
 
-Analizá la transcripción y extraé los campos clínicos que encuentres. Si un campo no se menciona, dejalo como null. No inventes datos.
+Analizá la transcripción y hacé dos cosas:
+
+1. EXTRAER campos clínicos estructurados: Si un campo no se menciona, dejalo como null. No inventes datos.
+2. GENERAR notas clínicas profesionales (campo "notes"): Tomá TODO lo que se dijo en la transcripción y reescribilo como notas clínicas profesionales. No transcribas palabra por palabra, pero tampoco inventes nada que no se haya dicho. Organizá la información de forma clara y profesional, como lo haría un veterinario al escribir en la historia clínica. Usá oraciones completas, agrupá la información por tema (examen físico, hallazgos, observaciones del dueño, etc.), y mejorá la redacción manteniendo toda la información original. Estilo: conciso, profesional, en tercera persona.
 
 Los campos posibles son:
 - reason: motivo de consulta (string)
@@ -76,7 +79,7 @@ Los campos posibles son:
 - hydration: estado de hidratación, solo uno de: "normal", "leve", "moderada", "severa" (string o null)
 - lymphNodes: ganglios linfáticos, solo uno de: "normal", "aumentados" (string o null)
 - dentalStatus: estado dental, solo uno de: "bueno", "regular", "malo" (string o null)
-- notes: cualquier otra observación relevante que no encaje en los campos anteriores (string)
+- notes: notas clínicas profesionales reescritas a partir de la transcripción (string, SIEMPRE generar este campo si hay contenido en la transcripción)
 
 Respondé SOLO con un objeto JSON válido. No agregues texto antes ni después del JSON.`
           },

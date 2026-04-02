@@ -185,3 +185,13 @@
 - [x] Bug 2: Translate NotFound page from English to Argentine Spanish
 - [x] Bug 3: Prevent deletion of owners with linked pets and pets with linked visits/vaccinations
 - [x] Bug 4: Add IP-based rate limiting (5 req/IP/hour) to appointments.requestBooking
+
+## Mejoras Formulario de Visita (April 2, 2026)
+- [x] Botón "Subir nota de voz" para archivos de audio pregrabados (además del grabador en vivo)
+- [x] Mejorar prompt de IA para llenar campo notas clínicas estilo Wispr (organizado, fiel, mejorado)
+- [x] Fix EXTRACTION_MAP: mucpiosas → mucosas en NuevaVisita.tsx
+- [x] Nuevo tipo de campo dinámico: Foto clínica con descripción
+- [x] Campo foto: abrir cámara o subir desde galería (2 botones separados)
+- [x] Campo foto: campo de texto para descripción de cada foto
+- [x] Fotos se suben como attachments al guardar la visita
+- [x] 39 tests pasando, TypeScript sin errores

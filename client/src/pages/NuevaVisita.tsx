@@ -21,10 +21,11 @@ import { toast } from "sonner";
 import {
   ArrowLeft, Plus, X, Calendar, Stethoscope, Weight, Thermometer,
   Heart, Activity, FileText, Save, Loader2, Eye, Droplets, CircleDot, Smile,
-  Mic, ChevronDown, Sparkles,
+  Mic, ChevronDown, Sparkles, Upload, Camera, Image as ImageIcon, Trash2,
 } from "lucide-react";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import AudioRecorder from "@/components/AudioRecorder";
+import { fileToBase64 } from "@/lib/uploadFile";
 
 // ── All optional fields with types ──
 type FieldDef = {
@@ -32,7 +33,7 @@ type FieldDef = {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   placeholder: string;
-  type: "text" | "textarea" | "select";
+  type: "text" | "textarea" | "select" | "photo";
   options?: { value: string; label: string }[];
 };
 
@@ -63,12 +64,15 @@ const OPTIONAL_FIELDS: FieldDef[] = [
   { key: "treatment", label: "Tratamiento", icon: FileText, placeholder: "Tratamiento aplicado...", type: "textarea" },
   { key: "medications", label: "Medicación", icon: FileText, placeholder: "Medicamentos recetados...", type: "textarea" },
   { key: "nextSteps", label: "Próximos pasos", icon: Calendar, placeholder: "Seguimiento, controles...", type: "textarea" },
+  // Foto clínica
+  { key: "photo", label: "Foto clínica", icon: Camera, placeholder: "", type: "photo" },
 ];
 
 const FIELD_GROUPS = [
   { title: "Signos vitales", keys: ["weight", "temperature", "heartRate", "respRate", "bodyCondition"] },
   { title: "Examen físico", keys: ["mucosas", "hydration", "lymphNodes", "dentalStatus"] },
   { title: "Clínico", keys: ["diagnosis", "treatment", "medications", "nextSteps"] },
+  { title: "Multimedia", keys: ["photo"] },
 ];
 
 // Map from LLM extraction keys to form field keys
@@ -83,11 +87,18 @@ const EXTRACTION_MAP: Record<string, string> = {
   heartRate: "heartRate",
   respRate: "respRate",
   bodyCondition: "bodyCondition",
-  mucpiosas: "mucosas", // LLM uses mucpiosas
+  mucosas: "mucosas",
   hydration: "hydration",
   lymphNodes: "lymphNodes",
   dentalStatus: "dentalStatus",
   notes: "_notes",
+};
+
+type PhotoEntry = {
+  file: File;
+  previewUrl: string;
+  base64: string;
+  description: string;
 };
 
 function speciesEmoji(species: string): string {
@@ -113,6 +124,7 @@ export default function NuevaVisita() {
 
   const { data: pet, isLoading: petLoading } = trpc.pets.getProfile.useQuery({ id: petId });
   const createVisitMut = trpc.visits.create.useMutation();
+  const uploadAttachmentMut = trpc.visits.uploadAttachment.useMutation();
   const processAudioMut = trpc.voice.processAudio.useMutation();
   const utils = trpc.useUtils();
 
@@ -130,6 +142,14 @@ export default function NuevaVisita() {
   const [isProcessingAudio, setIsProcessingAudio] = useState(false);
   const [showTranscription, setShowTranscription] = useState(false);
   const [fieldsAutoPopulated, setFieldsAutoPopulated] = useState(false);
+
+  // Photo state
+  const [photos, setPhotos] = useState<PhotoEntry[]>([]);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  // Voice file upload ref
+  const voiceFileInputRef = useRef<HTMLInputElement>(null);
 
   const availableFields = useMemo(
     () => OPTIONAL_FIELDS.filter((f) => !activeFields.has(f.key)),
@@ -161,13 +181,45 @@ export default function NuevaVisita() {
       delete next[key];
       return next;
     });
+    if (key === "photo") {
+      setPhotos([]);
+    }
   };
 
   const setFieldValue = (key: string, value: string) => {
     setFieldValues((prev) => ({ ...prev, [key]: value }));
   };
 
-  // Handle audio recording completion
+  // Apply extracted fields from AI
+  const applyExtractedFields = useCallback((extracted: Record<string, unknown>) => {
+    const newActiveFields = new Set(activeFields);
+    const newFieldValues = { ...fieldValues };
+
+    for (const [extractKey, value] of Object.entries(extracted)) {
+      if (value === null || value === undefined || value === "") continue;
+
+      const formKey = EXTRACTION_MAP[extractKey];
+      if (!formKey) continue;
+
+      const strValue = typeof value === "number" ? String(value) : String(value);
+
+      if (formKey === "_reason") {
+        if (!reason.trim()) setReason(strValue);
+      } else if (formKey === "_notes") {
+        // Always set notes from AI (Wispr-style improved version)
+        setNotes(strValue);
+      } else {
+        newActiveFields.add(formKey);
+        newFieldValues[formKey] = strValue;
+      }
+    }
+
+    setActiveFields(newActiveFields);
+    setFieldValues(newFieldValues);
+    setFieldsAutoPopulated(true);
+  }, [activeFields, fieldValues, reason]);
+
+  // Handle audio recording completion (live recording)
   const handleRecordingComplete = useCallback(async (audioBase64: string, mimeType: string) => {
     if (!pet) return;
     setIsProcessingAudio(true);
@@ -183,34 +235,9 @@ export default function NuevaVisita() {
       setAudioUrl(result.audioUrl);
       setAudioTranscription(result.transcription);
 
-      // Auto-populate fields from extraction
       const extracted = result.extractedFields as Record<string, unknown>;
       if (extracted) {
-        const newActiveFields = new Set(activeFields);
-        const newFieldValues = { ...fieldValues };
-
-        for (const [extractKey, value] of Object.entries(extracted)) {
-          if (value === null || value === undefined || value === "") continue;
-
-          const formKey = EXTRACTION_MAP[extractKey];
-          if (!formKey) continue;
-
-          const strValue = typeof value === "number" ? String(value) : String(value);
-
-          if (formKey === "_reason") {
-            if (!reason.trim()) setReason(strValue);
-          } else if (formKey === "_notes") {
-            if (!notes.trim()) setNotes(strValue);
-          } else {
-            // Activate the field and set its value
-            newActiveFields.add(formKey);
-            newFieldValues[formKey] = strValue;
-          }
-        }
-
-        setActiveFields(newActiveFields);
-        setFieldValues(newFieldValues);
-        setFieldsAutoPopulated(true);
+        applyExtractedFields(extracted);
       }
 
       toast.success("Audio procesado. Los campos se completaron automáticamente.", {
@@ -223,7 +250,104 @@ export default function NuevaVisita() {
     } finally {
       setIsProcessingAudio(false);
     }
-  }, [pet, activeFields, fieldValues, reason, notes, processAudioMut]);
+  }, [pet, processAudioMut, applyExtractedFields]);
+
+  // Handle voice file upload (pre-recorded)
+  const handleVoiceFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !pet) return;
+
+    // Reset input
+    if (voiceFileInputRef.current) voiceFileInputRef.current.value = "";
+
+    // Validate size (16MB)
+    const sizeMB = file.size / (1024 * 1024);
+    if (sizeMB > 16) {
+      toast.error(`El archivo es demasiado grande (${sizeMB.toFixed(1)}MB). El máximo es 16MB.`);
+      return;
+    }
+
+    // Validate type
+    const validTypes = ["audio/webm", "audio/mp3", "audio/mpeg", "audio/wav", "audio/ogg", "audio/m4a", "audio/mp4", "audio/x-m4a", "audio/aac", "video/mp4"];
+    if (!validTypes.some(t => file.type.startsWith(t.split("/")[0]))) {
+      toast.error("Formato no soportado. Usá archivos de audio (mp3, m4a, wav, ogg, webm).");
+      return;
+    }
+
+    setIsProcessingAudio(true);
+
+    try {
+      const base64 = await fileToBase64(file);
+      const mimeType = file.type || "audio/mpeg";
+
+      const result = await processAudioMut.mutateAsync({
+        audioBase64: base64,
+        mimeType,
+        petName: pet.name,
+        ownerName: pet.ownerName ?? undefined,
+      });
+
+      setAudioUrl(result.audioUrl);
+      setAudioTranscription(result.transcription);
+
+      const extracted = result.extractedFields as Record<string, unknown>;
+      if (extracted) {
+        applyExtractedFields(extracted);
+      }
+
+      toast.success("Nota de voz procesada. Los campos se completaron automáticamente.", {
+        description: "Revisá los datos y ajustá lo que sea necesario.",
+        duration: 5000,
+      });
+    } catch (err) {
+      console.error("Error processing voice file:", err);
+      toast.error("Error al procesar la nota de voz. Intentá de nuevo.");
+    } finally {
+      setIsProcessingAudio(false);
+    }
+  }, [pet, processAudioMut, applyExtractedFields]);
+
+  // Handle photo selection
+  const handlePhotoSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    // Reset input so same file can be selected again
+    const inputEl = e.target;
+    setTimeout(() => { inputEl.value = ""; }, 0);
+
+    for (const file of Array.from(files)) {
+      if (!file.type.startsWith("image/")) {
+        toast.error(`"${file.name}" no es una imagen válida.`);
+        continue;
+      }
+      const sizeMB = file.size / (1024 * 1024);
+      if (sizeMB > 10) {
+        toast.error(`"${file.name}" es demasiado grande (${sizeMB.toFixed(1)}MB). Máximo 10MB.`);
+        continue;
+      }
+
+      try {
+        const base64 = await fileToBase64(file);
+        const previewUrl = URL.createObjectURL(file);
+        setPhotos(prev => [...prev, { file, previewUrl, base64, description: "" }]);
+      } catch {
+        toast.error(`Error al procesar "${file.name}".`);
+      }
+    }
+  }, []);
+
+  const updatePhotoDescription = (index: number, description: string) => {
+    setPhotos(prev => prev.map((p, i) => i === index ? { ...p, description } : p));
+  };
+
+  const removePhoto = (index: number) => {
+    setPhotos(prev => {
+      const removed = prev[index];
+      if (removed) URL.revokeObjectURL(removed.previewUrl);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
 
   const handleSubmit = async () => {
     if (!reason.trim()) {
@@ -255,7 +379,22 @@ export default function NuevaVisita() {
         audioUrl: audioUrl ?? undefined,
         audioTranscription: audioTranscription ?? undefined,
       });
-      toast.success("Visita registrada");
+
+      // Upload photos as attachments
+      for (const photo of photos) {
+        const fileName = photo.description
+          ? `${photo.description.slice(0, 50).replace(/[^a-zA-Z0-9áéíóúñÁÉÍÓÚÑ\s-]/g, "")}.${photo.file.name.split(".").pop()}`
+          : photo.file.name;
+        await uploadAttachmentMut.mutateAsync({
+          visitId: result.id,
+          fileName,
+          mimeType: photo.file.type,
+          fileSize: photo.file.size,
+          fileBase64: photo.base64,
+        });
+      }
+
+      toast.success("Visita guardada correctamente");
       utils.visits.listByPet.invalidate({ petId });
       utils.pets.getProfile.invalidate({ id: petId });
       setLocation(`/visita/${result.id}`);
@@ -313,7 +452,7 @@ export default function NuevaVisita() {
         </CardContent>
       </Card>
 
-      {/* ── AUDIO RECORDER ── */}
+      {/* ── AUDIO RECORDER + UPLOAD ── */}
       <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
@@ -324,7 +463,7 @@ export default function NuevaVisita() {
             </Badge>
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Grabá la consulta hablando y la IA completará los campos automáticamente
+            Grabá la consulta o subí una nota de voz y la IA completará los campos automáticamente
           </p>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -334,6 +473,30 @@ export default function NuevaVisita() {
             existingAudioUrl={audioUrl}
             disabled={createVisitMut.isPending}
           />
+
+          {/* Upload voice note button */}
+          {!audioUrl && !isProcessingAudio && (
+            <div className="flex items-center gap-3">
+              <input
+                ref={voiceFileInputRef}
+                type="file"
+                accept="audio/*,.mp3,.m4a,.wav,.ogg,.webm,.aac,.mp4"
+                className="hidden"
+                onChange={handleVoiceFileUpload}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => voiceFileInputRef.current?.click()}
+                disabled={createVisitMut.isPending}
+                className="w-full gap-2 border-dashed text-muted-foreground hover:text-foreground"
+              >
+                <Upload className="h-4 w-4" />
+                Subir nota de voz
+              </Button>
+            </div>
+          )}
 
           {/* Transcription collapsible */}
           {audioTranscription && (
@@ -414,36 +577,125 @@ export default function NuevaVisita() {
             <>
               <Separator />
               <div className="space-y-4">
-                {OPTIONAL_FIELDS.filter((f) => activeFields.has(f.key)).map((field) => (
-                  <div key={field.key} className="group relative">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <Label className="flex items-center gap-1.5">
-                        <field.icon className="h-3.5 w-3.5 text-muted-foreground" />
-                        {field.label}
-                        {fieldsAutoPopulated && fieldValues[field.key] && (
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-emerald-600 border-emerald-300">IA</Badge>
+                {OPTIONAL_FIELDS.filter((f) => activeFields.has(f.key)).map((field) => {
+                  // Photo field has special rendering
+                  if (field.type === "photo") {
+                    return (
+                      <div key={field.key} className="group relative">
+                        <div className="flex items-center justify-between mb-2">
+                          <Label className="flex items-center gap-1.5">
+                            <Camera className="h-3.5 w-3.5 text-muted-foreground" />
+                            {field.label}
+                          </Label>
+                          <button onClick={() => removeField(field.key)} className="h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" title="Quitar campo">
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+
+                        {/* Photo list */}
+                        {photos.length > 0 && (
+                          <div className="space-y-3 mb-3">
+                            {photos.map((photo, idx) => (
+                              <div key={idx} className="flex gap-3 p-3 rounded-lg border bg-slate-50">
+                                <div className="relative w-20 h-20 rounded-lg overflow-hidden shrink-0 border">
+                                  <img src={photo.previewUrl} alt={photo.description || `Foto ${idx + 1}`} className="w-full h-full object-cover" />
+                                </div>
+                                <div className="flex-1 min-w-0 space-y-1.5">
+                                  <Input
+                                    value={photo.description}
+                                    onChange={(e) => updatePhotoDescription(idx, e.target.value)}
+                                    placeholder="Descripción de la foto (ej: lesión en pata derecha)"
+                                    className="h-9 text-sm"
+                                  />
+                                  <p className="text-xs text-muted-foreground truncate">{photo.file.name}</p>
+                                </div>
+                                <button
+                                  onClick={() => removePhoto(idx)}
+                                  className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0 self-start"
+                                  title="Eliminar foto"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
                         )}
-                      </Label>
-                      <button onClick={() => removeField(field.key)} className="h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" title="Quitar campo">
-                        <X className="h-3.5 w-3.5" />
-                      </button>
+
+                        {/* Add photo buttons */}
+                        <div className="flex gap-2">
+                          <input
+                            ref={cameraInputRef}
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            className="hidden"
+                            onChange={handlePhotoSelect}
+                          />
+                          <input
+                            ref={photoInputRef}
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            className="hidden"
+                            onChange={handlePhotoSelect}
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => cameraInputRef.current?.click()}
+                            className="flex-1 gap-2"
+                          >
+                            <Camera className="h-4 w-4" />
+                            Cámara
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => photoInputRef.current?.click()}
+                            className="flex-1 gap-2"
+                          >
+                            <ImageIcon className="h-4 w-4" />
+                            Galería
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // Regular fields
+                  return (
+                    <div key={field.key} className="group relative">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <Label className="flex items-center gap-1.5">
+                          <field.icon className="h-3.5 w-3.5 text-muted-foreground" />
+                          {field.label}
+                          {fieldsAutoPopulated && fieldValues[field.key] && (
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-emerald-600 border-emerald-300">IA</Badge>
+                          )}
+                        </Label>
+                        <button onClick={() => removeField(field.key)} className="h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" title="Quitar campo">
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                      {field.type === "textarea" ? (
+                        <Textarea value={fieldValues[field.key] ?? ""} onChange={(e) => setFieldValue(field.key, e.target.value)} placeholder={field.placeholder} rows={3} className="resize-y" />
+                      ) : field.type === "select" && field.options ? (
+                        <Select value={fieldValues[field.key] ?? ""} onValueChange={(v) => setFieldValue(field.key, v)}>
+                          <SelectTrigger className="h-11"><SelectValue placeholder="Seleccionar..." /></SelectTrigger>
+                          <SelectContent>
+                            {field.options.map((opt) => (
+                              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Input value={fieldValues[field.key] ?? ""} onChange={(e) => setFieldValue(field.key, e.target.value)} placeholder={field.placeholder} className="h-11" />
+                      )}
                     </div>
-                    {field.type === "textarea" ? (
-                      <Textarea value={fieldValues[field.key] ?? ""} onChange={(e) => setFieldValue(field.key, e.target.value)} placeholder={field.placeholder} rows={3} className="resize-y" />
-                    ) : field.type === "select" && field.options ? (
-                      <Select value={fieldValues[field.key] ?? ""} onValueChange={(v) => setFieldValue(field.key, v)}>
-                        <SelectTrigger className="h-11"><SelectValue placeholder="Seleccionar..." /></SelectTrigger>
-                        <SelectContent>
-                          {field.options.map((opt) => (
-                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <Input value={fieldValues[field.key] ?? ""} onChange={(e) => setFieldValue(field.key, e.target.value)} placeholder={field.placeholder} className="h-11" />
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </>
           )}
