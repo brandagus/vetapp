@@ -239,3 +239,12 @@
 
 ## Limpieza de datos de prueba para lanzamiento (April 2, 2026)
 - [x] Eliminar todos los datos de prueba de la base de datos (familiares, mascotas, visitas, vacunas, turnos, pagos, mensajes WhatsApp)
+
+## PWA Support (April 2, 2026)
+- [x] Generar iconos PWA 192x192 y 512x512 con iniciales "DB" y colores teal (subidos a CDN)
+- [x] Crear manifest.json en client/public con configuración PWA
+- [x] Agregar meta tags PWA en index.html (theme-color, apple-mobile-web-app-capable, apple-touch-icon)
+- [x] Crear service worker básico (sw.js) con cache del app shell y estrategia network-first/cache-first
+- [x] Registrar service worker en main.tsx
+- [x] Fix: updateSettings usaba id hardcodeado, ahora usa id dinámico
+- [x] 44 tests pasando

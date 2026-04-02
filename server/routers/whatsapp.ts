@@ -45,8 +45,9 @@ export const whatsappRouter = router({
       const db = await getDb();
       if (!db) throw new Error("DB no disponible");
 
-      // Ensure settings row exists
-      await getSettings();
+      // Ensure settings row exists and get its id
+      const currentSettings = await getSettings();
+      if (!currentSettings) throw new Error("No se pudieron obtener las configuraciones");
 
       const updateData: Record<string, unknown> = {};
       if (input.isActive !== undefined) updateData.isActive = input.isActive;
@@ -63,7 +64,7 @@ export const whatsappRouter = router({
         await db
           .update(whatsappSettings)
           .set(updateData)
-          .where(eq(whatsappSettings.id, 1));
+          .where(eq(whatsappSettings.id, currentSettings.id));
       }
 
       return { success: true };
