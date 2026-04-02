@@ -723,81 +723,122 @@ export default function Turnos() {
             {/* Familiar selector */}
             <div className="space-y-1.5">
               <Label>Familiar</Label>
-              <Controller
-                name="ownerId"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    value={field.value?.toString()}
-                    onValueChange={v => {
-                      const id = parseInt(v);
-                      field.onChange(id);
-                      setSelectedOwnerId(id);
-                      // Reset pet selection when owner changes
+              <div className="flex gap-2">
+                <Controller
+                  name="ownerId"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value?.toString() ?? ""}
+                      onValueChange={v => {
+                        const id = parseInt(v);
+                        field.onChange(id);
+                        setSelectedOwnerId(id);
+                        // Reset pet selection when owner changes
+                        setValue("petId", undefined);
+                        setSelectedPetId(undefined);
+                        // Auto-fill owner info
+                        const owner = owners?.find(o => o.id === id);
+                        if (owner) {
+                          setValue("clientName", owner.name);
+                          setValue("clientPhone", owner.phone ?? "");
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Seleccionar familiar..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {owners?.map(o => (
+                          <SelectItem key={o.id} value={o.id.toString()}>
+                            {o.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {selectedOwnerId && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="shrink-0"
+                    onClick={() => {
+                      setSelectedOwnerId(undefined);
+                      setSelectedPetId(undefined);
+                      setValue("ownerId", undefined);
                       setValue("petId", undefined);
-                      // Auto-fill owner info
-                      const owner = owners?.find(o => o.id === id);
-                      if (owner) {
-                        setValue("clientName", owner.name);
-                        setValue("clientPhone", owner.phone ?? "");
-                      }
+                      setValue("clientName", "");
+                      setValue("clientPhone", "");
+                      setValue("petName", "");
+                      setValue("petSpecies", "");
                     }}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar familiar..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {owners?.map(o => (
-                        <SelectItem key={o.id} value={o.id.toString()}>
-                          {o.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    <X className="h-4 w-4" />
+                  </Button>
                 )}
-              />
+              </div>
             </div>
 
             {/* Pet selector — filtered by owner */}
             <div className="space-y-1.5">
               <Label>Mascota</Label>
-              <Controller
-                name="petId"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    value={field.value?.toString()}
-                    onValueChange={v => {
-                      const id = parseInt(v);
-                      field.onChange(id);
-                      setSelectedPetId(id);
-                      // Auto-fill pet info
-                      const allPets = selectedOwnerId ? filteredPets : pets;
-                      const pet = allPets?.find(p => p.id === id);
-                      if (pet) {
-                        setValue("petName", pet.name);
-                        setValue("petSpecies", pet.species ?? "");
-                      }
+              <div className="flex gap-2">
+                <Controller
+                  name="petId"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value?.toString() ?? ""}
+                      onValueChange={v => {
+                        const id = parseInt(v);
+                        field.onChange(id);
+                        setSelectedPetId(id);
+                        // Auto-fill pet info
+                        const allPets = selectedOwnerId ? filteredPets : pets;
+                        const pet = allPets?.find(p => p.id === id);
+                        if (pet) {
+                          setValue("petName", pet.name);
+                          setValue("petSpecies", pet.species ?? "");
+                        }
+                      }}
+                      disabled={!selectedOwnerId && !(pets && pets.length > 0)}
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder={
+                          selectedOwnerId
+                            ? (filteredPets?.length === 0 ? "Sin mascotas registradas" : "Seleccionar mascota...")
+                            : "Primero seleccioná un familiar"
+                        } />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(selectedOwnerId ? filteredPets : pets)?.map(p => (
+                          <SelectItem key={p.id} value={p.id.toString()}>
+                            {p.name}{p.species ? ` (${p.species})` : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {selectedPetId && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="shrink-0"
+                    onClick={() => {
+                      setSelectedPetId(undefined);
+                      setValue("petId", undefined);
+                      setValue("petName", "");
+                      setValue("petSpecies", "");
                     }}
-                    disabled={!selectedOwnerId && !(pets && pets.length > 0)}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder={
-                        selectedOwnerId
-                          ? (filteredPets?.length === 0 ? "Sin mascotas registradas" : "Seleccionar mascota...")
-                          : "Primero seleccioná un familiar"
-                      } />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {(selectedOwnerId ? filteredPets : pets)?.map(p => (
-                        <SelectItem key={p.id} value={p.id.toString()}>
-                          {p.name}{p.species ? ` (${p.species})` : ""}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    <X className="h-4 w-4" />
+                  </Button>
                 )}
-              />
+              </div>
               {selectedOwnerId && filteredPets?.length === 0 && (
                 <p className="text-xs text-muted-foreground">Este familiar no tiene mascotas registradas aún.</p>
               )}

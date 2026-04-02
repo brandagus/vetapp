@@ -226,3 +226,8 @@
 - [x] Fix: "Crear nuevo paciente" dialog aparece siempre, incluso con mascota existente seleccionada
 - [x] Solo mostrar opción de crear paciente cuando NO se seleccionó mascota existente
 - [x] Permitir crear turnos con mascotas existentes sin interrupciones
+
+## Bug Fix: No se puede deseleccionar familiar en Nuevo Turno (April 2, 2026)
+- [x] Agregar botón X de limpiar/deseleccionar al selector de familiar
+- [x] Agregar botón X de limpiar/deseleccionar al selector de mascota
+- [x] Al limpiar familiar, también limpiar mascota y todos los campos auto-completados
