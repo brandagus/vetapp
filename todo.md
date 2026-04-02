@@ -212,3 +212,12 @@
 
 ## UX: Dashboard cards clickeables (April 2, 2026)
 - [x] Hacer las 4 tarjetas del dashboard (Turnos hoy, Cobros pendientes, Familiares, Pacientes) clickeables con navegación a sus páginas
+
+## Rediseño Formulario Nuevo Turno (April 2, 2026)
+- [x] Simplificar formulario: quitar teléfono y especie como campos separados
+- [x] Selector de familiar con auto-fill de datos
+- [x] Selector de mascota filtrado por familiar seleccionado
+- [x] Si familiar tiene múltiples mascotas, mostrar solo las suyas en el dropdown
+- [x] Opción "Crear nuevo paciente" después de guardar el turno (dialog post-creación)
+- [x] Campos: Familiar, Mascota, Fecha/hora inicio, Fecha/hora fin, Dirección, Motivo, Notas, Estado
+- [x] Campo "nombre del cliente" solo visible si no se selecciona familiar existente

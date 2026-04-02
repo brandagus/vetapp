@@ -36,6 +36,7 @@ import {
   Link2,
   Unlink,
   RefreshCw,
+  PawPrint,
 } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -58,7 +59,7 @@ import {
 import { es } from "date-fns/locale";
 import { AppointmentStatusBadge } from "@/components/StatusBadge";
 import { cn } from "@/lib/utils";
-import { useSearch } from "wouter";
+import { useSearch, useLocation } from "wouter";
 
 const appointmentSchema = z.object({
   ownerId: z.number().optional(),
@@ -85,6 +86,7 @@ export default function Turnos() {
   const [selectedAppt, setSelectedAppt] = useState<number | null>(null);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [syncingId, setSyncingId] = useState<number | null>(null);
+  const [, setLocation] = useLocation();
   const utils = trpc.useUtils();
   const searchString = useSearch();
 
@@ -160,7 +162,9 @@ export default function Turnos() {
       utils.dashboard.getSummary.invalidate();
       setShowCreate(false);
       reset();
+      setSelectedOwnerId(undefined);
       toast.success("Turno creado");
+      setShowPostCreate(true);
       // Auto-sync to Google Calendar if connected
       if (gcalStatus?.connected && data.id) {
         syncAppt.mutate({
@@ -196,6 +200,16 @@ export default function Turnos() {
     },
   });
 
+  const [selectedOwnerId, setSelectedOwnerId] = useState<number | undefined>();
+  const [showPostCreate, setShowPostCreate] = useState(false);
+  const [lastCreatedOwnerId, setLastCreatedOwnerId] = useState<number | undefined>();
+
+  // Fetch pets filtered by selected owner
+  const { data: filteredPets } = trpc.pets.list.useQuery(
+    selectedOwnerId ? { ownerId: selectedOwnerId } : undefined,
+    { enabled: !!selectedOwnerId }
+  );
+
   const { register, handleSubmit, reset, control, setValue } = useForm<AppointmentForm>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: { status: "pendiente" },
@@ -206,6 +220,7 @@ export default function Turnos() {
     const endTime = data.endTime
       ? new Date(data.endTime)
       : new Date(startTime.getTime() + 60 * 60 * 1000);
+    setLastCreatedOwnerId(data.ownerId);
     createMutation.mutate({
       ...data,
       startTime: startTime.toISOString(),
@@ -654,79 +669,137 @@ export default function Turnos() {
         </Dialog>
       )}
 
+      {/* Post-create dialog: option to create new pet */}
+      <Dialog open={showPostCreate} onOpenChange={setShowPostCreate}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Check className="h-5 w-5 text-green-600" />
+              Turno creado
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            ¿Querés registrar un nuevo paciente para este turno?
+          </p>
+          <DialogFooter className="flex gap-2 sm:gap-2">
+            <Button variant="outline" onClick={() => setShowPostCreate(false)}>
+              No, listo
+            </Button>
+            <Button
+              onClick={() => {
+                setShowPostCreate(false);
+                const url = lastCreatedOwnerId
+                  ? `/pacientes/nuevo?ownerId=${lastCreatedOwnerId}`
+                  : "/pacientes/nuevo";
+                setLocation(url);
+              }}
+            >
+              <PawPrint className="h-4 w-4 mr-1.5" />
+              Crear nuevo paciente
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Create dialog */}
-      <Dialog open={showCreate} onOpenChange={setShowCreate}>
+      <Dialog open={showCreate} onOpenChange={(open) => {
+        setShowCreate(open);
+        if (!open) { setSelectedOwnerId(undefined); reset(); }
+      }}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Nuevo turno</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            {/* Familiar selector */}
+            <div className="space-y-1.5">
+              <Label>Familiar</Label>
+              <Controller
+                name="ownerId"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    value={field.value?.toString()}
+                    onValueChange={v => {
+                      const id = parseInt(v);
+                      field.onChange(id);
+                      setSelectedOwnerId(id);
+                      // Reset pet selection when owner changes
+                      setValue("petId", undefined);
+                      // Auto-fill owner info
+                      const owner = owners?.find(o => o.id === id);
+                      if (owner) {
+                        setValue("clientName", owner.name);
+                        setValue("clientPhone", owner.phone ?? "");
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar familiar..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {owners?.map(o => (
+                        <SelectItem key={o.id} value={o.id.toString()}>
+                          {o.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+
+            {/* Pet selector — filtered by owner */}
+            <div className="space-y-1.5">
+              <Label>Mascota</Label>
+              <Controller
+                name="petId"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    value={field.value?.toString()}
+                    onValueChange={v => {
+                      const id = parseInt(v);
+                      field.onChange(id);
+                      // Auto-fill pet info
+                      const allPets = selectedOwnerId ? filteredPets : pets;
+                      const pet = allPets?.find(p => p.id === id);
+                      if (pet) {
+                        setValue("petName", pet.name);
+                        setValue("petSpecies", pet.species ?? "");
+                      }
+                    }}
+                    disabled={!selectedOwnerId && !(pets && pets.length > 0)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={
+                        selectedOwnerId
+                          ? (filteredPets?.length === 0 ? "Sin mascotas registradas" : "Seleccionar mascota...")
+                          : "Primero seleccioná un familiar"
+                      } />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(selectedOwnerId ? filteredPets : pets)?.map(p => (
+                        <SelectItem key={p.id} value={p.id.toString()}>
+                          {p.name}{p.species ? ` (${p.species})` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {selectedOwnerId && filteredPets?.length === 0 && (
+                <p className="text-xs text-muted-foreground">Este familiar no tiene mascotas registradas aún.</p>
+              )}
+            </div>
+
+            {/* Or manual client name if no owner selected */}
+            {!selectedOwnerId && (
               <div className="space-y-1.5">
-                <Label>Familiar existente</Label>
-                <Controller
-                  name="ownerId"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      value={field.value?.toString()}
-                      onValueChange={v => field.onChange(parseInt(v))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {owners?.map(o => (
-                          <SelectItem key={o.id} value={o.id.toString()}>{o.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>O nombre del cliente</Label>
+                <Label>O nombre del cliente (nuevo)</Label>
                 <Input {...register("clientName")} placeholder="Nombre del cliente" />
               </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label>Teléfono</Label>
-                <Input {...register("clientPhone")} placeholder="+54 11..." />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Nombre de mascota</Label>
-                <Input {...register("petName")} placeholder="Ej: Firulais" />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label>Especie</Label>
-                <Input {...register("petSpecies")} placeholder="Perro, Gato..." />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Estado</Label>
-                <Controller
-                  name="status"
-                  control={control}
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pendiente">Pendiente</SelectItem>
-                        <SelectItem value="confirmado">Confirmado</SelectItem>
-                        <SelectItem value="completado">Completado</SelectItem>
-                        <SelectItem value="cancelado">Cancelado</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </div>
-            </div>
+            )}
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
@@ -752,6 +825,25 @@ export default function Turnos() {
             <div className="space-y-1.5">
               <Label>Notas</Label>
               <Textarea {...register("notes")} rows={2} placeholder="Observaciones..." />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Estado</Label>
+              <Controller
+                name="status"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pendiente">Pendiente</SelectItem>
+                      <SelectItem value="confirmado">Confirmado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
 
             {gcalStatus?.connected && (
