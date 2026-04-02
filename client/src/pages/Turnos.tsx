@@ -737,11 +737,12 @@ export default function Turnos() {
                         // Reset pet selection when owner changes
                         setValue("petId", undefined);
                         setSelectedPetId(undefined);
-                        // Auto-fill owner info
+                        // Auto-fill owner info including address
                         const owner = owners?.find(o => o.id === id);
                         if (owner) {
                           setValue("clientName", owner.name);
                           setValue("clientPhone", owner.phone ?? "");
+                          setValue("address", owner.address ?? "");
                         }
                       }}
                     >
@@ -773,6 +774,7 @@ export default function Turnos() {
                       setValue("clientPhone", "");
                       setValue("petName", "");
                       setValue("petSpecies", "");
+                      setValue("address", "");
                     }}
                   >
                     <X className="h-4 w-4" />
@@ -801,6 +803,23 @@ export default function Turnos() {
                         if (pet) {
                           setValue("petName", pet.name);
                           setValue("petSpecies", pet.species ?? "");
+                          // If no owner selected yet, auto-fill owner from pet data
+                          if (!selectedOwnerId && pet.ownerId) {
+                            const ownerId = pet.ownerId;
+                            setValue("ownerId", ownerId);
+                            setSelectedOwnerId(ownerId);
+                            // Fill owner details from owners list
+                            const owner = owners?.find(o => o.id === ownerId);
+                            if (owner) {
+                              setValue("clientName", owner.name);
+                              setValue("clientPhone", owner.phone ?? "");
+                              setValue("address", owner.address ?? "");
+                            } else {
+                              // Fallback to pet query data
+                              setValue("clientName", pet.ownerName ?? "");
+                              setValue("clientPhone", pet.ownerPhone ?? "");
+                            }
+                          }
                         }
                       }}
                       disabled={!selectedOwnerId && !(pets && pets.length > 0)}

@@ -231,3 +231,8 @@
 - [x] Agregar botón X de limpiar/deseleccionar al selector de familiar
 - [x] Agregar botón X de limpiar/deseleccionar al selector de mascota
 - [x] Al limpiar familiar, también limpiar mascota y todos los campos auto-completados
+
+## Bug Fix: Auto-completar en Nuevo Turno (April 2, 2026)
+- [x] Fix: seleccionar mascota primero auto-completa info del dueño (nombre, teléfono, dirección)
+- [x] Fix: seleccionar familiar ahora auto-completa dirección del domicilio
+- [x] Fix: limpiar familiar también limpia dirección
