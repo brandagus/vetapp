@@ -195,3 +195,13 @@
 - [x] Campo foto: campo de texto para descripción de cada foto
 - [x] Fotos se suben como attachments al guardar la visita
 - [x] 39 tests pasando, TypeScript sin errores
+
+## Exportar Historial Clínico a PDF (April 2, 2026)
+- [x] Endpoint server: agregar query para obtener historial completo del paciente
+- [x] Generación de PDF server-side con pdfkit (datos del paciente, visitas, vacunas, adjuntos)
+- [x] Diseño profesional del PDF: header con colores corporativos, secciones organizadas
+- [x] Secciones: datos del paciente, ambiente, alimentación, antecedentes, desparasitación, familiar, vacunas (tabla), visitas (detalle completo con examen físico, notas, adjuntos)
+- [x] Botón "Exportar PDF" en el perfil del paciente (MascotaDetalle.tsx)
+- [x] PDF se sube a S3 y se abre en nueva pestaña
+- [x] Tests para el módulo de PDF (5 tests: router, función, formateo de fechas, cálculo de edad, label map)
+- [x] 44 tests pasando en total

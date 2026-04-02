@@ -10,7 +10,7 @@ import {
   ArrowLeft, User, Phone, Mail, MapPin, Calendar, Stethoscope, DollarSign,
   Camera, Edit, Plus, FileText, ChevronRight, ChevronDown, Weight, Thermometer,
   Trash2, Syringe, Home, UtensilsCrossed, HeartPulse, Bug, AlertTriangle,
-  Loader2, Clock, Pill, Scissors,
+  Loader2, Clock, Pill, Scissors, Download,
 } from "lucide-react";
 import { useState, useRef } from "react";
 import {
@@ -142,6 +142,23 @@ export default function MascotaDetalle() {
   const deleteVaccineMut = trpc.vaccinations.delete.useMutation({
     onSuccess: () => { utils.vaccinations.listByPet.invalidate({ petId }); toast.success("Vacuna eliminada"); },
   });
+
+  const [isExporting, setIsExporting] = useState(false);
+  const exportPDFMut = trpc.pdfExport.generatePatientHistory.useMutation({
+    onSuccess: (data) => {
+      window.open(data.url, "_blank");
+      toast.success("PDF generado correctamente");
+      setIsExporting(false);
+    },
+    onError: () => {
+      toast.error("Error al generar el PDF");
+      setIsExporting(false);
+    },
+  });
+  const handleExportPDF = () => {
+    setIsExporting(true);
+    exportPDFMut.mutate({ petId });
+  };
 
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editForm, setEditForm] = useState<Record<string, string>>({});
@@ -326,6 +343,10 @@ export default function MascotaDetalle() {
               <div className="mt-3 flex gap-2 justify-center sm:justify-start flex-wrap">
                 <Button size="sm" variant="outline" onClick={openEdit} className="gap-1.5"><Edit className="h-3.5 w-3.5" /> Editar</Button>
                 <Button size="sm" onClick={() => setLocation(`/pacientes/${petId}/nueva-visita`)} className="gap-1.5"><Plus className="h-3.5 w-3.5" /> Nueva visita</Button>
+                <Button size="sm" variant="outline" onClick={handleExportPDF} disabled={isExporting} className="gap-1.5">
+                  {isExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+                  {isExporting ? "Generando..." : "Exportar PDF"}
+                </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="outline" size="sm" className="text-destructive border-destructive/30 gap-1.5"><Trash2 className="h-3.5 w-3.5" /></Button>

@@ -13,6 +13,7 @@ import { vaccinationsRouter } from "./routers/vaccinations";
 import { voiceRouter } from "./routers/voice";
 import { adminUsersRouter } from "./routers/adminUsers";
 import { whatsappRouter } from "./routers/whatsapp";
+import { pdfExportRouter } from "./routers/pdfExport";
 
 export const appRouter = router({
   system: systemRouter,
@@ -35,6 +36,7 @@ export const appRouter = router({
   voice: voiceRouter,
   adminUsers: adminUsersRouter,
   whatsapp: whatsappRouter,
+  pdfExport: pdfExportRouter,
 });
 
 export type AppRouter = typeof appRouter;
